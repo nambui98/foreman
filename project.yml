@@ -1,0 +1,55 @@
+name: PortBar
+options:
+  bundleIdPrefix: com.nambui
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_APP_SANDBOX: NO
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+targets:
+  PortBar:
+    type: application
+    platform: macOS
+    sources: [Sources/PortBar]
+    info:
+      path: Sources/PortBar/Info.plist
+      properties:
+        CFBundleName: PortBar
+        CFBundleDisplayName: PortBar
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.developer-tools
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.portbar
+        GENERATE_INFOPLIST_FILE: NO
+  PortBarTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/PortBarTests]
+    dependencies:
+      - target: PortBar
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.portbar.tests
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/PortBar.app/Contents/MacOS/PortBar
+schemes:
+  PortBar:
+    build:
+      targets:
+        PortBar: all
+        PortBarTests: [test]
+    test:
+      targets: [PortBarTests]
