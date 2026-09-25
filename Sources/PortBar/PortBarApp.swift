@@ -21,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let notifier = Notifier()
             notifier.onOpen = { [monitor] member in Task { await monitor.openAgent(member) } }
             monitor.events.post = { notifier.post($0) }
-            if settings.notifyEnabled { notifier.requestAuthorization() }
+            if settings.notifyEnabled { Notifier.requestAuthorization() }
             self.notifier = notifier
         }
     }

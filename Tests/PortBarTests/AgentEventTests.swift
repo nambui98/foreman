@@ -95,7 +95,7 @@ struct StatusTransitionTrackerTests {
 
 @MainActor
 struct AgentEventCenterTests {
-    private func makeCenter() throws -> (AgentEventCenter, AppSettings, Box) {
+    func makeCenter() throws -> (AgentEventCenter, AppSettings, Box) {
         let settings = AppSettings(defaults: try #require(UserDefaults(suiteName: "portbar-events-\(UUID())")))
         let center = AgentEventCenter(settings: settings)
         let box = Box()
@@ -105,12 +105,12 @@ struct AgentEventCenterTests {
 
     final class Box { var notices: [AgentEventCenter.Notice] = [] }
 
-    private func agent(pid: Int32 = 500, status: AgentStatus = .idle) -> AgentRow {
+    func agent(pid: Int32 = 500, status: AgentStatus = .idle) -> AgentRow {
         AgentRow(pid: pid, kind: .claude, cwd: "/tmp/proj", host: "Orca", tty: "ttys001", startSec: 42,
                  status: status, cpuPercent: 0, memoryBytes: 0, childCount: 0)
     }
 
-    private let t0 = Date(timeIntervalSince1970: 2_000_000)
+    let t0 = Date(timeIntervalSince1970: 2_000_000)
 
     @Test func stopAfterLongTaskNotifiesWithDuration() throws {
         let (center, _, box) = try makeCenter()
@@ -174,5 +174,43 @@ struct AgentEventCenterTests {
         center.handleHook(.stop, agent: nil, now: t0)
         #expect(box.notices.isEmpty)
         #expect(center.lastHookEvent?.contains("không khớp") == true)
+    }
+}
+
+extension AgentEventCenterTests {
+    @Test func silentHooksHandBackToCPUFallback() throws {
+        let (center, _, box) = try makeCenter()
+        // One hook event, then hooks go quiet (config overwritten): after the silence limit the
+        // CPU fallback watches the agent again.
+        center.handleHook(.input, agent: agent(), now: t0)
+        box.notices.removeAll()
+        let later = t0 + AgentEventCenter.hookSilenceLimit + 1
+        center.observe(agents: [agent(status: .working)], now: later)
+        center.observe(agents: [agent(status: .working)], now: later + 30)
+        center.observe(agents: [agent(status: .idle)], now: later + 70)
+        #expect(box.notices.count == 1)
+    }
+
+    @Test func openHookedTaskStaysExcludedPastSilenceLimit() throws {
+        let (center, _, box) = try makeCenter()
+        center.handleHook(.start, agent: agent(), now: t0)
+        let later = t0 + AgentEventCenter.hookSilenceLimit + 1
+        center.observe(agents: [agent(status: .working)], now: later)
+        center.observe(agents: [agent(status: .working)], now: later + 30)
+        center.observe(agents: [agent(status: .idle)], now: later + 70)
+        #expect(box.notices.isEmpty)
+    }
+}
+
+struct NotifierUserInfoTests {
+    @Test func agentSurvivesNotificationRoundTrip() throws {
+        let member = AgentController.Member(pid: 4321, startSec: 1_790_000_000)
+        // UserNotifications stores userInfo as a property list: values come back as NSNumber.
+        let data = try PropertyListSerialization.data(
+            fromPropertyList: Notifier.userInfo(for: member), format: .binary, options: 0)
+        let restored = try #require(
+            try PropertyListSerialization.propertyList(from: data, format: nil) as? [AnyHashable: Any])
+        #expect(Notifier.agent(from: restored) == member)
+        #expect(Notifier.agent(from: ["pid": "x"]) == nil)
     }
 }

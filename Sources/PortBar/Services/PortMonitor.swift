@@ -185,17 +185,38 @@ final class PortMonitor {
     func handleAgentEvent(_ url: URL) async {
         guard let (kind, pid) = AgentEventURL.parse(url) else { return }
         var agent = agent(containing: pid)
-        if agent == nil {
-            // An agent started since the last refresh is not listed yet.
-            await refresh()
+        // An agent started since the last refresh is not listed yet. Any local process can open
+        // portbar:// URLs, so the retry is a cheap agent-only pass and at most one per interval.
+        if agent == nil, ContinuousClock.now - lastEventLookup >= Self.eventLookupInterval {
+            lastEventLookup = .now
+            await refreshAgentsAfterCurrent()
             agent = self.agent(containing: pid)
         }
         events.handleHook(kind, agent: agent)
     }
 
+    static let eventLookupInterval: Duration = .seconds(2)
+    private var lastEventLookup = ContinuousClock.now - .seconds(60)
+
+    /// Waits for a running refresh (up to 3s) instead of skipping, then does an agent-only pass.
+    private func refreshAgentsAfterCurrent() async {
+        let deadline = ContinuousClock.now + .seconds(3)
+        while isRefreshing, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        await refreshAgents()
+    }
+
+    /// The listed agent that is `pid` or one of its ancestors, matched by start time as well so a
+    /// recycled PID is never mistaken for an agent that exited.
     private func agent(containing pid: Int32) -> AgentRow? {
-        let chain = [pid] + ProcessTable.snapshot().ancestors(of: pid)
-        return chain.lazy.compactMap { id in self.agents.first { $0.pid == id } }.first
+        let table = ProcessTable.snapshot()
+        for id in [pid] + table.ancestors(of: pid) {
+            if let agent = agents.first(where: { $0.pid == id }), table.entries[id]?.startSec == agent.startSec {
+                return agent
+            }
+        }
+        return nil
     }
 
     /// Notification click: focus the agent's terminal if the same process is still running.

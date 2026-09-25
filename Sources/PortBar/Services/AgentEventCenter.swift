@@ -18,13 +18,16 @@ final class AgentEventCenter {
     @ObservationIgnored var post: (Notice) -> Void = { _ in }
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private var taskStart: [AgentController.Member: Date] = [:]
-    /// Agents that reported through hooks: their CPU status is no longer used to guess.
-    @ObservationIgnored private var hooked: Set<AgentController.Member> = []
+    /// Last hook event per agent. While hooks keep arriving (or a hooked task is open) the CPU
+    /// fallback leaves that agent alone; if they stop, the fallback takes over again.
+    @ObservationIgnored private var lastHook: [AgentController.Member: Date] = [:]
     @ObservationIgnored private var lastPosted: [String: Date] = [:]
     @ObservationIgnored private var tracker = StatusTransitionTracker()
 
     /// The same notice for the same agent is dropped inside this window (hooks can fire in bursts).
     static let dedupeWindow: TimeInterval = 10
+    /// A hooked agent with no open task and no hook event for this long is watched by CPU again.
+    static let hookSilenceLimit: TimeInterval = 600
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -35,7 +38,7 @@ final class AgentEventCenter {
             + (agent?.label ?? "không khớp agent nào")
         guard let agent else { return }
         let id = Self.identity(of: agent)
-        hooked.insert(id)
+        lastHook[id] = now
         switch kind {
         case .start:
             taskStart[id] = now
@@ -52,12 +55,15 @@ final class AgentEventCenter {
 
     /// CPU fallback for agents without hooks; call after every agent refresh.
     func observe(agents: [AgentRow], now: Date = Date()) {
+        let live = Set(agents.map(Self.identity(of:)))
+        lastHook = lastHook.filter { live.contains($0.key) }
+        taskStart = taskStart.filter { live.contains($0.key) }
+        let hooked = Set(lastHook.filter { id, last in
+            taskStart[id] != nil || now.timeIntervalSince(last) < Self.hookSilenceLimit
+        }.keys)
         let finished = tracker.update(
             agents.map { (Self.identity(of: $0), $0.status) }, now: now,
             minWork: settings.notifyMinWorkSec, idleDebounce: settings.cpuIdleDebounceSec, excluded: hooked)
-        let live = Set(agents.map(Self.identity(of:)))
-        hooked.formIntersection(live)
-        taskStart = taskStart.filter { live.contains($0.key) }
         for id in finished {
             guard let agent = agents.first(where: { Self.identity(of: $0) == id }) else { continue }
             emit(Notice(agent: id, kind: .stop, title: agent.label, body: "Có vẻ đã xong việc (CPU đã rảnh)"), now: now)

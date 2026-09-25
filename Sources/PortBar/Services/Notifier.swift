@@ -13,8 +13,19 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         center.delegate = self
     }
 
-    func requestAuthorization() {
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    static func requestAuthorization() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    nonisolated static func userInfo(for agent: AgentController.Member) -> [AnyHashable: Any] {
+        ["pid": Int(agent.pid), "startSec": agent.startSec]
+    }
+
+    /// Values come back as NSNumber after the notification round trip.
+    nonisolated static func agent(from userInfo: [AnyHashable: Any]) -> AgentController.Member? {
+        guard let pid = (userInfo["pid"] as? NSNumber)?.int32Value,
+              let startSec = (userInfo["startSec"] as? NSNumber)?.uint64Value else { return nil }
+        return AgentController.Member(pid: pid, startSec: startSec)
     }
 
     func post(_ notice: AgentEventCenter.Notice) {
@@ -22,7 +33,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         content.title = notice.title
         content.body = notice.body
         content.sound = .default
-        content.userInfo = ["pid": Int(notice.agent.pid), "startSec": notice.agent.startSec]
+        content.userInfo = Self.userInfo(for: notice.agent)
         center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
 
@@ -36,8 +47,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
     ) async {
-        let info = response.notification.request.content.userInfo
-        guard let pid = info["pid"] as? Int, let startSec = info["startSec"] as? UInt64 else { return }
-        await MainActor.run { onOpen(AgentController.Member(pid: Int32(pid), startSec: startSec)) }
+        guard let agent = Self.agent(from: response.notification.request.content.userInfo) else { return }
+        await MainActor.run { onOpen(agent) }
     }
 }

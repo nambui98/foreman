@@ -1,6 +1,5 @@
 import ServiceManagement
 import SwiftUI
-import UserNotifications
 
 /// The Settings window (⌘, or the gear in the panel footer).
 struct SettingsView: View {
@@ -56,10 +55,11 @@ struct SettingsView: View {
         Section("Agents") {
             Toggle("Thông báo khi agent xong việc / chờ bạn", isOn: $settings.notifyEnabled)
                 .onChange(of: settings.notifyEnabled) { _, enabled in
-                    if enabled { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
+                    if enabled { Notifier.requestAuthorization() }
                 }
             Stepper("Chỉ báo task dài ≥ \(Int(settings.notifyMinWorkSec))s",
                     value: $settings.notifyMinWorkSec, in: 0...600, step: 10)
+                .help("Codex chỉ gửi sự kiện kết thúc (không có lúc bắt đầu) nên luôn được báo.")
             Stepper("Agent không có hook: coi là xong sau \(Int(settings.cpuIdleDebounceSec))s CPU rảnh",
                     value: $settings.cpuIdleDebounceSec, in: 10...300, step: 10)
             snippet("Claude Code — gộp vào ~/.claude/settings.json", AgentEventURL.claudeHooksSnippet)
