@@ -68,3 +68,19 @@ struct HotKeyComboTests {
         #expect(!reloaded.hotKeyEnabled)
     }
 }
+
+@MainActor
+struct HotKeyRegistrationTests {
+    /// ⌃⌥⇧F13: unlikely to be taken by another app on the test machine.
+    private let combo = HotKeyCombo(
+        keyCode: UInt32(kVK_F13), carbonModifiers: UInt32(controlKey | optionKey | shiftKey), key: "F13")
+
+    @Test func sameComboRegistersAgainOnlyAfterRelease() {
+        var first = HotKey(combo) {}
+        #expect(first != nil)
+        #expect(HotKey(combo) {} == nil)  // still held by `first`
+        first = nil
+        #expect(first == nil)
+        #expect(HotKey(combo) {} != nil)
+    }
+}

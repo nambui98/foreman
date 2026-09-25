@@ -13,6 +13,9 @@ struct HotKeyRecorder: View {
         }
         .monospaced()
         .onDisappear(perform: stop)
+        // Settings windows are often hidden rather than torn down, so onDisappear may not fire;
+        // a monitor left behind would swallow every key press in the app.
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { _ in stop() }
     }
 
     private func start() {
@@ -21,7 +24,7 @@ struct HotKeyRecorder: View {
             if event.keyCode == 53 {  // Esc
                 stop()
             } else if let recorded = HotKeyCombo(event: event), recorded.isValid {
-                combo = recorded
+                if recorded != combo { combo = recorded }
                 stop()
             }
             return nil  // swallow keys while recording

@@ -10,28 +10,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotKey: HotKey?
 
     override init() {
-        let settings = MainActor.assumeIsolated { AppSettings() }
+        let settings = AppSettings()
         self.settings = settings
-        monitor = MainActor.assumeIsolated { PortMonitor(settings: settings) }
+        monitor = PortMonitor(settings: settings)
         super.init()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Unit tests use the app as host: no notification center there.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
-        MainActor.assumeIsolated {
-            let notifier = Notifier()
-            notifier.onOpen = { [monitor] member in Task { await monitor.openAgent(member) } }
-            monitor.events.post = { notifier.post($0) }
-            if settings.notifyEnabled { Notifier.requestAuthorization() }
-            self.notifier = notifier
-            applyHotKey()
-        }
+        let notifier = Notifier()
+        notifier.onOpen = { [monitor] member in Task { await monitor.openAgent(member) } }
+        monitor.events.post = { notifier.post($0) }
+        if settings.notifyEnabled { Notifier.requestAuthorization() }
+        self.notifier = notifier
+        applyHotKey()
     }
 
     /// (Re)registers the global shortcut whenever its settings change.
-    @MainActor private func applyHotKey() {
+    private func applyHotKey() {
         withObservationTracking {
+            // Carbon refuses a combo that is still registered, so release the old one first.
+            hotKey = nil
             hotKey = settings.hotKeyEnabled ? HotKey(settings.hotKey) { PanelToggler.toggle() } : nil
             settings.hotKeyRegistered = !settings.hotKeyEnabled || hotKey != nil
         } onChange: { [weak self] in
@@ -40,15 +40,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        MainActor.assumeIsolated {
-            for url in urls {
-                Task { await monitor.handleAgentEvent(url) }
-            }
+        for url in urls {
+            Task { await monitor.handleAgentEvent(url) }
         }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        MainActor.assumeIsolated { monitor.agentController.resumeAll() }
+        monitor.agentController.resumeAll()
     }
 }
 

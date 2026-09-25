@@ -6,7 +6,11 @@ import AppKit
 enum PanelToggler {
     @discardableResult
     static func toggle() -> Bool {
-        guard let button = statusButton() else { return false }
+        guard let button = statusButton() else {
+            // Relies on AppKit's internal status bar window class; say so if that ever changes.
+            NSLog("PortBar: status item button not found, cannot toggle the panel")
+            return false
+        }
         button.performClick(nil)
         return true
     }
