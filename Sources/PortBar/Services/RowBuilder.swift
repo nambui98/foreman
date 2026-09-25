@@ -6,17 +6,20 @@ enum RowBuilder {
         cpuPercent: [Int32: Double],
         currentUID: UInt32,
         home: String,
-        owners: [Int32: String] = [:]
+        owners: [Int32: String] = [:],
+        established: [Int32: [Int]] = [:],
+        startSec: [Int32: UInt64] = [:]
     ) -> [PortRow] {
         let byPID = Dictionary(grouping: sockets, by: \.pid)
         let rows = byPID.map { pid, sockets -> PortRow in
             let info = details[pid]
             let name = sockets.first?.command ?? "?"
             let uid = info?.uid ?? sockets.first?.uid
+            let ports = Array(Set(sockets.map(\.port))).sorted()
             return PortRow(
                 pid: pid,
                 name: name,
-                ports: Array(Set(sockets.map(\.port))).sorted(),
+                ports: ports,
                 commandLine: commandLine(info?.arguments ?? []),
                 cwd: info?.cwd,
                 executablePath: info?.executablePath,
@@ -27,7 +30,10 @@ enum RowBuilder {
                     name: name, executablePath: info?.executablePath, uid: uid,
                     currentUID: currentUID, home: home),
                 isKillable: uid == currentUID,
-                owner: owners[pid]
+                owner: owners[pid],
+                // Outbound connections (the process as a client) have a local port it does not listen on.
+                inboundConnections: established[pid, default: []].count(where: ports.contains),
+                startSec: startSec[pid]
             )
         }
         return rows.sorted { ($0.group, $0.ports.first ?? 0, $0.pid) < ($1.group, $1.ports.first ?? 0, $1.pid) }

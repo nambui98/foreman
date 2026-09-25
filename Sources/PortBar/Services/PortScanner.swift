@@ -12,19 +12,20 @@ enum PortScannerError: Error, LocalizedError {
     }
 }
 
-/// Lists listening TCP sockets by running `/usr/sbin/lsof` with a fixed argv (no shell).
+/// Lists listening TCP sockets (and established ones, to count inbound connections) by running `/usr/sbin/lsof` with a fixed argv (no shell).
 enum PortScanner {
     static let timeout: TimeInterval = 3
 
-    static func scan() async throws -> [ListeningSocket] {
+    static func scan() async throws -> LsofScan {
         try await Task.detached(priority: .utility) { try runLsof() }.value
     }
 
-    private static func runLsof() throws -> [ListeningSocket] {
+    private static func runLsof() throws -> LsofScan {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
         // +c 0: untruncated command names. -n/-P: no DNS or service-name lookups (fast, numeric).
-        process.arguments = ["+c", "0", "-nP", "-iTCP", "-sTCP:LISTEN", "-F", "pcun"]
+        // LISTEN+ESTABLISHED in one pass costs the same as LISTEN alone (~0.04s).
+        process.arguments = ["+c", "0", "-nP", "-iTCP", "-sTCP:LISTEN,ESTABLISHED", "-F", "pcunT"]
         let stdout = Pipe()
         process.standardOutput = stdout
         process.standardError = FileHandle.nullDevice
@@ -43,6 +44,6 @@ enum PortScanner {
         guard process.terminationStatus <= 1 else {
             throw PortScannerError.failed(status: process.terminationStatus)
         }
-        return LsofParser.parse(String(decoding: data, as: UTF8.self))
+        return LsofParser.scan(String(decoding: data, as: UTF8.self))
     }
 }

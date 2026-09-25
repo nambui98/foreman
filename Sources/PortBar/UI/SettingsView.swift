@@ -26,12 +26,21 @@ struct SettingsView: View {
                     Text(loginError).font(.caption).foregroundStyle(.red)
                 }
             }
+            portsSection
             agentsSection
         }
         .formStyle(.grouped)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { loginStatus = LoginItem.status }
+    }
+
+    @ViewBuilder private var portsSection: some View {
+        @Bindable var settings = settings
+        Section("Cổng") {
+            Stepper("Dev server coi là rảnh sau \(Int(settings.idleHours)) giờ không có kết nối",
+                    value: $settings.idleHours, in: 1...72, step: 1)
+        }
     }
 
     @ViewBuilder private var agentsSection: some View {

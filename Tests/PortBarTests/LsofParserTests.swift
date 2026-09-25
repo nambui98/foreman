@@ -60,3 +60,44 @@ struct LsofParserTests {
         #expect(LsofParser.parse("p1\ncx\nn*:notaport\n").isEmpty)
     }
 }
+
+struct LsofScanTests {
+    @Test func splitsListeningAndEstablished() {
+        let output = """
+        p501
+        cnode
+        u501
+        f20
+        n*:3000
+        TST=LISTEN
+        TQR=0
+        f21
+        n127.0.0.1:3000->127.0.0.1:61000
+        TST=ESTABLISHED
+        f22
+        n192.168.1.2:61001->1.2.3.4:443
+        TST=ESTABLISHED
+        f23
+        n[::1]:3000
+        TST=CLOSE_WAIT
+        p777
+        cpostgres
+        u501
+        f5
+        n127.0.0.1:5432
+        """
+        let scan = LsofParser.scan(output)
+        #expect(scan.listening.map(\.port) == [3000, 5432])
+        #expect(scan.established[501] == [3000, 61001])
+        #expect(scan.established[777] == nil)
+    }
+
+    @Test func inboundCountsOnlyListeningPorts() {
+        let sockets = [ListeningSocket(pid: 501, command: "node", uid: 501, address: "*", port: 3000)]
+        let rows = RowBuilder.rows(
+            sockets: sockets, details: [:], cpuPercent: [:], currentUID: 501, home: "/Users/me",
+            established: [501: [3000, 3000, 61001]], startSec: [501: 1_700_000_000])
+        #expect(rows.first?.inboundConnections == 2)
+        #expect(rows.first?.startSec == 1_700_000_000)
+    }
+}

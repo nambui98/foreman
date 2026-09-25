@@ -11,6 +11,7 @@ struct HeaderView: View {
     @Binding var query: String
     @Binding var tab: PanelTab
     let totals: String
+    var requestCleanup: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -18,6 +19,11 @@ struct HeaderView: View {
                 Text("PortBar").font(.headline)
                 Spacer()
                 Text(totals).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                if tab == .ports, !monitor.cleanupCandidates.isEmpty {
+                    Button("Dọn (\(monitor.cleanupCandidates.count))", action: requestCleanup)
+                        .controlSize(.small)
+                        .help("Dừng các dev server mồ côi / rảnh lâu")
+                }
                 Button {
                     Task { await monitor.refresh() }
                 } label: {

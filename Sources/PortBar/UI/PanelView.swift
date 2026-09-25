@@ -8,10 +8,11 @@ struct PanelView: View {
     @State private var expanded: Set<ProcessGroup> = [.dev, .dataContainer]
     @State private var confirmation: Confirmation?
     @State private var tab: PanelTab = .ports
+    @State private var showCleanup = false
 
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(query: $query, tab: $tab, totals: totals)
+            HeaderView(query: $query, tab: $tab, totals: totals) { showCleanup = true }
             Divider()
             switch tab {
             case .ports: content
@@ -26,6 +27,12 @@ struct PanelView: View {
         .overlay {
             if let confirmation {
                 ConfirmOverlay(confirmation: confirmation) { self.confirmation = nil }
+            } else if showCleanup {
+                CleanupOverlay(candidates: monitor.cleanupCandidates) { selected in
+                    Task { await monitor.cleanUp(selected) }
+                } dismiss: {
+                    showCleanup = false
+                }
             }
         }
     }

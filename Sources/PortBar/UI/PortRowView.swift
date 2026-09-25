@@ -17,6 +17,14 @@ struct PortRowView: View {
                 HStack(spacing: 4) {
                     Text(row.name).font(.system(.body, weight: .medium)).lineLimit(1)
                     Text(verbatim: String(row.pid)).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
+                    ForEach(row.flags.sorted(by: { $0.isOrphan && !$1.isOrphan }), id: \.self) { flag in
+                        FlagBadge(flag: flag, row: row)
+                    }
+                    if row.inboundConnections > 0 {
+                        Label("\(row.inboundConnections)", systemImage: "arrow.left.arrow.right")
+                            .font(.caption2).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                            .help("\(row.inboundConnections) kết nối đang mở tới tiến trình này")
+                    }
                 }
                 if let detail = Formatters.abbreviatePath(row.cwd) ?? row.commandLine {
                     Text(detail).font(.caption).foregroundStyle(.secondary)
@@ -150,6 +158,27 @@ struct PortRowView: View {
             Task { await monitor.kill(row, wholeGroup: false, force: force) }
         }
     }
+}
+
+/// `mồ côi` / `rảnh 5h` capsule; the tooltip gives the reason.
+struct FlagBadge: View {
+    let flag: RowFlag
+    let row: PortRow
+
+    var body: some View {
+        Text(text).font(.caption2.weight(.semibold))
+            .padding(.horizontal, 5).padding(.vertical, 1)
+            .background(color.opacity(0.2), in: .capsule).foregroundStyle(color)
+            .help(flag.reason)
+    }
+
+    private var text: String {
+        guard flag == .idle, let started = row.startSec else { return flag.title }
+        let age = Int(Date().timeIntervalSince1970) - Int(started)
+        return "\(flag.title) \(Formatters.uptime(seconds: age))"
+    }
+
+    private var color: Color { flag.isOrphan ? .orange : .secondary }
 }
 
 /// A kill waiting for user confirmation.

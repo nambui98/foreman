@@ -22,6 +22,7 @@ Install: copy `build/Build/Products/Release/PortBar.app` to `~/Applications`.
 - Right-click a row: kill whole process group (always confirmed, lists members), open `localhost:PORT`, copy PID, open folder in Finder.
 - System-section kills ask for confirmation. Other users' / root processes cannot be killed (no privilege escalation).
 - A group that contains an interactive terminal shell is never group-killed, so the terminal session survives.
+- Leftover dev servers are tagged **mồ côi** (parent exited, or folder deleted — e.g. a removed git worktree) or **rảnh Nh** (no inbound connection, no CPU, older than the idle threshold in Settings, over 3 refreshes). **Dọn (N)** in the header stops the ones you tick: orphans pre-ticked, idle ones not.
 
 ## Agents tab
 Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose, Amp — with project folder, host app + tty, uptime, status (working / idle / paused) and CPU/RAM summed over the agent's whole process tree.
@@ -36,7 +37,7 @@ Settings → Agents: a notification when an agent finishes a task (≥ 20s by de
 - **Fallback:** agents without hooks are watched by CPU: a working stretch ≥ 20s followed by 30s of idle CPU counts as done. While such a stretch is timed, agents are re-sampled every 3s (process table only, no lsof).
 
 ## How it works
-- Ports: `/usr/sbin/lsof +c 0 -nP -iTCP -sTCP:LISTEN -F pcun` (fixed argv, 3s timeout).
+- Ports: `/usr/sbin/lsof +c 0 -nP -iTCP -sTCP:LISTEN,ESTABLISHED -F pcunT` (fixed argv, 3s timeout); established sockets on a listening port count as inbound connections.
 - CPU / RAM / cwd / argv: libproc (`proc_pid_rusage` phys_footprint + CPU ticks → ns via mach timebase, `PROC_PIDVNODEPATHINFO`, `KERN_PROCARGS2`).
 - Agents: one process-table pass (`proc_listallpids` + libproc, sysctl fallback for root-owned links such as `login`), cached per (pid, start time).
 - Refresh: every 2s while the panel is open, every 15s otherwise.

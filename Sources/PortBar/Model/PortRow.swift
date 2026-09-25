@@ -29,8 +29,40 @@ struct PortRow: Identifiable, Sendable, Equatable {
     let isKillable: Bool
     /// Agent that started this process, e.g. `Claude Code · Zunera`.
     var owner: String?
+    /// ESTABLISHED connections into one of this process's listening ports.
+    var inboundConnections = 0
+    /// Process start time (seconds since epoch); also guards cleanup against PID reuse.
+    var startSec: UInt64?
+    var flags: Set<RowFlag> = []
 
     var id: Int32 { pid }
+}
+
+/// Signs that a dev process was left behind.
+enum RowFlag: Hashable, Sendable {
+    /// Parent exited (re-parented to launchd): its terminal, agent or runner is gone.
+    case parentExited
+    /// Working directory no longer exists, e.g. its git worktree was removed.
+    case folderDeleted
+    /// No inbound connections and no CPU for a long time.
+    case idle
+
+    var isOrphan: Bool { self != .idle }
+
+    var title: String {
+        switch self {
+        case .parentExited, .folderDeleted: "mồ côi"
+        case .idle: "rảnh"
+        }
+    }
+
+    var reason: String {
+        switch self {
+        case .parentExited: "tiến trình cha đã thoát"
+        case .folderDeleted: "thư mục đã bị xoá"
+        case .idle: "không có kết nối, không dùng CPU"
+        }
+    }
 }
 
 /// Progress of a kill request for one row.

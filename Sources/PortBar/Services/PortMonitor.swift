@@ -33,8 +33,14 @@ final class PortMonitor {
     private let home = NSHomeDirectory()
     private var lastFullRefresh: ContinuousClock.Instant?
     let events: AgentEventCenter
+    private let settings: AppSettings
+    private var flagger = RowFlagger()
+
+    /// Dev rows flagged as orphan or idle, offered by the "Dọn" button.
+    var cleanupCandidates: [PortRow] { rows.filter { !$0.flags.isEmpty && $0.isKillable } }
 
     init(settings: AppSettings) {
+        self.settings = settings
         events = AgentEventCenter(settings: settings)
     }
 
@@ -86,7 +92,8 @@ final class PortMonitor {
 
     private func refreshOnce(includePorts: Bool) async {
         do {
-            let sockets = includePorts ? try await PortScanner.scan() : []
+            let scan = includePorts ? try await PortScanner.scan() : LsofScan()
+            let sockets = scan.listening
             let pids = Set(sockets.map(\.pid))
             let uid = currentUID
             let cache = detectorCache
@@ -106,10 +113,16 @@ final class PortMonitor {
             }
             sampler.prune(keeping: pids)
 
-            rows = RowBuilder.rows(
+            let entries = snapshot.table.entries
+            let built = RowBuilder.rows(
                 sockets: sockets, details: snapshot.portDetails, cpuPercent: cpu, currentUID: currentUID,
                 home: home,
-                owners: AgentRowBuilder.owners(portPids: pids, table: snapshot.table, agents: agents))
+                owners: AgentRowBuilder.owners(portPids: pids, table: snapshot.table, agents: agents),
+                established: scan.established,
+                startSec: entries.compactMapValues { pids.contains($0.pid) ? $0.startSec : nil })
+            rows = flagger.apply(
+                to: built, parentPid: entries.compactMapValues { pids.contains($0.pid) ? $0.ppid : nil },
+                now: UInt64(Date().timeIntervalSince1970), idleHours: settings.idleHours)
             // Forget kill state for processes that are gone.
             killStates = killStates.filter { pids.contains($0.key) }
             lastError = nil
@@ -159,11 +172,6 @@ final class PortMonitor {
         return Snapshot(table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache)
     }
 
-    // MARK: Agents
-
-    // Actions take a fresh snapshot (~3ms): the last refresh can be up to 15s old and still list
-    // processes that have exited since.
-
     // MARK: Agent events
 
     /// A `portbar://agent-event` URL from an agent hook. The pid is the hook shell's parent: the
@@ -202,6 +210,11 @@ final class PortMonitor {
         }
     }
 
+    // MARK: Agents
+
+    // Actions take a fresh snapshot (~3ms): the last refresh can be up to 15s old and still list
+    // processes that have exited since.
+
     func pause(_ agent: AgentRow) async {
         agentController.pause(agentPid: agent.pid, table: .snapshot())
         await refresh()
@@ -239,13 +252,37 @@ final class PortMonitor {
             ? await killer.forceKill(pid: row.pid, wholeGroup: wholeGroup)
             : await killer.terminate(pid: row.pid, wholeGroup: wholeGroup)
 
-        switch outcome {
-        case .exited, .notFound: killStates[row.pid] = nil
-        case .stillRunning: killStates[row.pid] = .needsForce
-        case .notPermitted: killStates[row.pid] = .failed("Không đủ quyền để dừng tiến trình này")
-        case .refused(let reason): killStates[row.pid] = .failed(reason)
+        killStates[row.pid] = Self.state(after: outcome)
+        await refresh()
+    }
+
+    /// SIGTERMs the selected leftover processes in parallel, then refreshes once. A row whose PID
+    /// now belongs to a different process (start time changed) is skipped.
+    func cleanUp(_ targets: [PortRow]) async {
+        let killer = killer
+        await withTaskGroup(of: (Int32, KillOutcome).self) { group in
+            for row in targets where row.isKillable {
+                guard let started = row.startSec,
+                      ProcessInspector.bsdInfo(pid: row.pid)?.pbi_start_tvsec == started else {
+                    continue
+                }
+                killStates[row.pid] = .terminating
+                group.addTask { (row.pid, await killer.terminate(pid: row.pid, wholeGroup: false)) }
+            }
+            for await (pid, outcome) in group {
+                killStates[pid] = Self.state(after: outcome)
+            }
         }
         await refresh()
+    }
+
+    private static func state(after outcome: KillOutcome) -> KillState? {
+        switch outcome {
+        case .exited, .notFound: nil
+        case .stillRunning: .needsForce
+        case .notPermitted: .failed("Không đủ quyền để dừng tiến trình này")
+        case .refused(let reason): .failed(reason)
+        }
     }
 
     func fail(pid: Int32, _ message: String) {
