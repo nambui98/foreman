@@ -40,6 +40,8 @@ struct PortRow: Identifiable, Sendable, Equatable {
     var projectSubpath: String?
     /// Dev tool detected from argv, e.g. `Next.js`, `Vite`.
     var framework: String?
+    /// Containers publishing ports through this process (OrbStack / Docker host process).
+    var containers: [Container] = []
 
     var id: Int32 { pid }
 }

@@ -8,7 +8,8 @@ enum RowBuilder {
         home: String,
         owners: [Int32: String] = [:],
         established: [Int32: [Int]] = [:],
-        startSec: [Int32: UInt64] = [:]
+        startSec: [Int32: UInt64] = [:],
+        containers: [Container] = []
     ) -> [PortRow] {
         let byPID = Dictionary(grouping: sockets, by: \.pid)
         let rows = byPID.map { pid, sockets -> PortRow in
@@ -37,7 +38,9 @@ enum RowBuilder {
                 gitBranch: info?.gitBranch,
                 project: info?.repository?.name,
                 projectSubpath: info.flatMap { info in info.cwd.flatMap { info.repository?.subpath(of: $0) } },
-                framework: FrameworkDetector.detect(arguments: info?.arguments ?? [], name: name)
+                framework: FrameworkDetector.detect(arguments: info?.arguments ?? [], name: name),
+                containers: DockerScanner.hostProcessNames.contains(name)
+                    ? containers.filter { $0.ports.contains { ports.contains($0.host) } } : []
             )
         }
         // Dev servers of the same project sit together; everything else stays in port order.

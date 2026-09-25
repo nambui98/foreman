@@ -39,34 +39,10 @@ enum TerminalJumper {
     }
 
     private nonisolated static func runOrcaSwitch(cli: URL, handle: String) -> String? {
-        guard let result = run(cli, ["terminal", "switch", "--terminal", handle, "--json"]) else {
+        guard let result = ProcessRunner.run(cli, ["terminal", "switch", "--terminal", handle, "--json"]) else {
             return String(localized: "Couldn't run the orca CLI")
         }
         return orcaSwitchError(json: result.output, exitStatus: result.status)
-    }
-
-    /// Runs a helper with a fixed argv (no shell), killing it after `timeout`. Blocking: call off
-    /// the main actor. Output is read before waiting so a full pipe cannot deadlock the child.
-    private nonisolated static func run(
-        _ executable: URL, _ arguments: [String], timeout: DispatchTimeInterval = .seconds(3)
-    ) -> (output: Data, status: Int32)? {
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = arguments
-        let output = Pipe()
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-        do {
-            try process.run()
-        } catch {
-            return nil
-        }
-        let timer = DispatchWorkItem { if process.isRunning { process.terminate() } }
-        DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timer)
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        timer.cancel()
-        return (data, process.terminationStatus)
     }
 
     /// nil when Orca reports `"ok": true`; otherwise a short message for the row.
@@ -84,7 +60,7 @@ enum TerminalJumper {
     /// leaves time to answer that prompt; the script itself gives up after 3s.
     private static func focusByTTY(script: String, bundleID: String) async -> String? {
         let result = await Task.detached(priority: .userInitiated) {
-            run(URL(fileURLWithPath: "/usr/bin/osascript"), ["-e", script], timeout: .seconds(10))
+            ProcessRunner.run(URL(fileURLWithPath: "/usr/bin/osascript"), ["-e", script], timeout: .seconds(10))
         }.value
         if let result, result.status == 0,
            String(decoding: result.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines) == "ok" {

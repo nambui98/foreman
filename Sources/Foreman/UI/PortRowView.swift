@@ -9,10 +9,20 @@ struct PortRowView: View {
     /// System-section rows confirm every kill; all rows confirm whole-group kills.
     let isSystem: Bool
     let requestConfirmation: (PendingKill) -> Void
+    var confirm: (Confirmation) -> Void = { _ in }
     @State private var isHovering = false
     @State private var probes: [Int: ProbeResult] = [:]
 
     var body: some View {
+        VStack(spacing: 0) {
+            processRow
+            ForEach(row.containers) { container in
+                ContainerRowView(container: container, confirm: confirm)
+            }
+        }
+    }
+
+    private var processRow: some View {
         HStack(alignment: .top, spacing: 10) {
             portChips
             VStack(alignment: .leading, spacing: 2) {

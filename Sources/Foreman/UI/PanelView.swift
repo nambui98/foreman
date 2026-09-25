@@ -142,7 +142,7 @@ struct PanelView: View {
                         confirmation = Confirmation(title: pending.title, message: pending.message) {
                             await monitor.kill(pending.row, wholeGroup: pending.wholeGroup, force: pending.force)
                         }
-                    }
+                    } confirm: { confirmation = $0 }
                 }
             }
         }

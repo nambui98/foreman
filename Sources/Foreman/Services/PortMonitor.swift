@@ -18,6 +18,12 @@ final class PortMonitor {
     private(set) var isPanelOpen = false
     private(set) var agents: [AgentRow] = []
     private(set) var agentStates: [Int32: KillState] = [:]
+    private(set) var containers: [Container] = []
+    private(set) var containerStates: [String: KillState] = [:]
+    private var lastDockerScan: ContinuousClock.Instant?
+    /// `docker ps` costs ~0.06s CPU: often while the panel is open, rarely in the background.
+    static let dockerOpenInterval: Duration = .seconds(5)
+    static let dockerClosedInterval: Duration = .seconds(60)
 
     var devCount: Int { rows.count(where: { $0.group == .dev }) }
     var devMemoryBytes: UInt64 { rows.filter { $0.group == .dev }.compactMap(\.memoryBytes).reduce(0, +) }
@@ -114,6 +120,8 @@ final class PortMonitor {
             updateAgents(from: snapshot)
             guard includePorts else { return }
 
+            await refreshContainersIfDue(hostPresent: sockets.contains { DockerScanner.hostProcessNames.contains($0.command) })
+
             var cpu: [Int32: Double] = [:]
             for (pid, info) in snapshot.portDetails {
                 if let cpuNs = info.cpuTimeNs,
@@ -129,7 +137,8 @@ final class PortMonitor {
                 home: home,
                 owners: AgentRowBuilder.owners(portPids: pids, table: snapshot.table, agents: agents),
                 established: scan.established,
-                startSec: entries.compactMapValues { pids.contains($0.pid) ? $0.startSec : nil })
+                startSec: entries.compactMapValues { pids.contains($0.pid) ? $0.startSec : nil },
+                containers: containers)
             rows = flagger.apply(
                 to: built, parentPid: entries.compactMapValues { pids.contains($0.pid) ? $0.ppid : nil },
                 now: UInt64(Date().timeIntervalSince1970), idleHours: settings.idleHours)
@@ -303,6 +312,36 @@ final class PortMonitor {
 
         killStates[row.pid] = Self.state(after: outcome)
         await refresh()
+    }
+
+    // MARK: Containers
+
+    /// Re-lists containers when a Docker/OrbStack host process holds ports and the scan is due.
+    private func refreshContainersIfDue(hostPresent: Bool, force: Bool = false) async {
+        guard hostPresent else {
+            containers = []
+            return
+        }
+        let interval = isPanelVisible ? Self.dockerOpenInterval : Self.dockerClosedInterval
+        if !force, let last = lastDockerScan, ContinuousClock.now - last < interval { return }
+        lastDockerScan = .now
+        if let listed = await Task.detached(priority: .utility, operation: { DockerScanner.list() }).value {
+            containers = listed
+            containerStates = containerStates.filter { id, _ in listed.contains { $0.id == id } }
+        }
+    }
+
+    func perform(_ action: DockerScanner.Action, on container: Container) async {
+        containerStates[container.id] = .terminating
+        let id = container.id
+        let ok = await Task.detached(priority: .userInitiated) { DockerScanner.perform(action, containerID: id) }.value
+        containerStates[container.id] = ok ? nil : .failed(String(localized: "docker \(action.rawValue) failed"))
+        lastDockerScan = nil
+        await refresh()
+    }
+
+    func dismissContainerError(id: String) {
+        if case .failed = containerStates[id] { containerStates[id] = nil }
     }
 
     /// SIGTERMs the selected leftover processes in parallel, then refreshes once. A row whose PID
