@@ -48,6 +48,21 @@ struct GitBranchTests {
         #expect(GitBranch.resolve(cwd: relative.path) == "feature-x")
     }
 
+    @Test func cacheRereadsOnlyAfterLifetime() throws {
+        let repo = try makeDir()
+        defer { try? FileManager.default.removeItem(at: repo) }
+        let head = repo.appending(path: ".git/HEAD")
+        try write("ref: refs/heads/one\n", to: head)
+        var cache = GitBranch.Cache()
+        #expect(cache.branch(cwd: repo.path, nowNs: 1_000) == "one")
+        try write("ref: refs/heads/two\n", to: head)
+        #expect(cache.branch(cwd: repo.path, nowNs: 2_000) == "one")
+        #expect(cache.branch(cwd: repo.path, nowNs: 1_000 + GitBranch.Cache.lifetime) == "two")
+        cache.prune(keeping: [])
+        try write("ref: refs/heads/three\n", to: head)
+        #expect(cache.branch(cwd: repo.path, nowNs: 1_000 + GitBranch.Cache.lifetime + 1) == "three")
+    }
+
     @Test func noRepository() throws {
         let dir = try makeDir()
         defer { try? FileManager.default.removeItem(at: dir) }

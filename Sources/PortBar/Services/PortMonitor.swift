@@ -20,10 +20,12 @@ final class PortMonitor {
     private(set) var agentStates: [Int32: KillState] = [:]
 
     var devCount: Int { rows.count(where: { $0.group == .dev }) }
+    var devMemoryBytes: UInt64 { rows.filter { $0.group == .dev }.compactMap(\.memoryBytes).reduce(0, +) }
 
     private var sampler = CPUSampler()
     private var agentSampler = CPUSampler()
     private var detectorCache = AgentDetector.Cache()
+    private var branchCache = GitBranch.Cache()
     let agentController = AgentController(defaults: .standard)
     private var isRefreshing = false
     private var refreshRequested = false
@@ -88,6 +90,7 @@ final class PortMonitor {
         let usage: [Int32: AgentTreeUsage]
         let portDetails: [Int32: ProcessDetails]
         let cache: AgentDetector.Cache
+        let branches: GitBranch.Cache
     }
 
     private func refreshOnce(includePorts: Bool) async {
@@ -97,10 +100,12 @@ final class PortMonitor {
             let pids = Set(sockets.map(\.pid))
             let uid = currentUID
             let cache = detectorCache
+            let branches = branchCache
             let snapshot = await Task.detached(priority: .utility) {
-                Self.collect(portPids: pids, currentUID: uid, cache: cache)
+                Self.collect(portPids: pids, currentUID: uid, cache: cache, branches: branches)
             }.value
             detectorCache = snapshot.cache
+            branchCache = snapshot.branches
             updateAgents(from: snapshot)
             guard includePorts else { return }
 
@@ -149,8 +154,10 @@ final class PortMonitor {
     }
 
     private nonisolated static func collect(
-        portPids: Set<Int32>, currentUID: UInt32, cache: AgentDetector.Cache
+        portPids: Set<Int32>, currentUID: UInt32, cache: AgentDetector.Cache, branches: GitBranch.Cache
     ) -> Snapshot {
+        var branches = branches
+        var folders: Set<String> = []
         let table = ProcessTable.snapshot()
         var cache = cache
         let agents = AgentDetector.agents(
@@ -161,7 +168,8 @@ final class PortMonitor {
             let members = table.descendants(of: agent.pid)
             let cwd = ProcessInspector.currentDirectory(pid: agent.pid)
             var tree = AgentTreeUsage(
-                childCount: members.count, cwd: cwd, gitBranch: cwd.flatMap(GitBranch.resolve(cwd:)))
+                childCount: members.count, cwd: cwd, gitBranch: cwd.flatMap { branches.branch(cwd: $0) })
+            if let cwd { folders.insert(cwd) }
             for pid in [agent.pid] + members {
                 guard let sample = ProcessInspector.usage(pid: pid) else { continue }
                 tree.memoryBytes += sample.memoryBytes
@@ -172,10 +180,14 @@ final class PortMonitor {
         }
         let portDetails = Dictionary(uniqueKeysWithValues: portPids.map { pid in
             var details = ProcessInspector.details(pid: pid)
-            details.gitBranch = details.cwd.flatMap(GitBranch.resolve(cwd:))
+            details.gitBranch = details.cwd.flatMap { branches.branch(cwd: $0) }
+            if let cwd = details.cwd { folders.insert(cwd) }
             return (pid, details)
         })
-        return Snapshot(table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache)
+        // Agent-only passes see no port folders; keep those entries until the next full pass.
+        if !portPids.isEmpty { branches.prune(keeping: folders) }
+        return Snapshot(
+            table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache, branches: branches)
     }
 
     // MARK: Agent events

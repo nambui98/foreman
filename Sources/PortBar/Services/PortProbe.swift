@@ -57,6 +57,7 @@ actor PortProbe {
                 body.append(byte)
                 if body.count >= maxBytes { break }
             }
+            bytes.task.cancel()  // a streaming response (SSE, HMR) would otherwise stay open until timeout
             let status = (response as? HTTPURLResponse)?.statusCode
             return ProbeResult(status: status, title: title(in: String(decoding: body, as: UTF8.self)))
         } catch let error as URLError {

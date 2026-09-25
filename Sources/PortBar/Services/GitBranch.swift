@@ -1,8 +1,26 @@
 import Foundation
 
 /// Current git branch of a folder, read straight from `.git/HEAD` (no `git` subprocess).
-/// A few stats and one small file read per call, cheap enough to run on every refresh.
+/// A few stats and one small file read per call; `Cache` keeps refreshes from repeating it.
 enum GitBranch {
+    /// Branches per folder, re-read at most every `lifetime` so frequent agent passes cost nothing.
+    struct Cache: Sendable {
+        static let lifetime: UInt64 = 10_000_000_000  // ns
+        private var entries: [String: (branch: String?, readAtNs: UInt64)] = [:]
+
+        mutating func branch(cwd: String, nowNs: UInt64 = DispatchTime.now().uptimeNanoseconds) -> String? {
+            if let entry = entries[cwd], nowNs &- entry.readAtNs < Self.lifetime { return entry.branch }
+            let branch = GitBranch.resolve(cwd: cwd)
+            entries[cwd] = (branch, nowNs)
+            return branch
+        }
+
+        /// Forgets folders no process uses any more.
+        mutating func prune(keeping folders: Set<String>) {
+            entries = entries.filter { folders.contains($0.key) }
+        }
+    }
+
     static func resolve(cwd: String) -> String? {
         guard cwd != "/" else { return nil }
         var dir = URL(fileURLWithPath: cwd, isDirectory: true)

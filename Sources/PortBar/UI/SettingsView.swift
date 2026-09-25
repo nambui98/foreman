@@ -43,7 +43,11 @@ struct SettingsView: View {
                 }
             }
             .onAppear {
-                if settings.editorBundleID == nil { settings.editorBundleID = EditorLauncher.preferred(bundleID: nil)?.bundleID }
+                // Also replaces a saved editor that has since been uninstalled.
+                let installed = EditorLauncher.installed()
+                if !installed.contains(where: { $0.bundleID == settings.editorBundleID }) {
+                    settings.editorBundleID = installed.first?.bundleID
+                }
             }
             Stepper("Dev server coi là rảnh sau \(Int(settings.idleHours)) giờ không có kết nối",
                     value: $settings.idleHours, in: 1...72, step: 1)
