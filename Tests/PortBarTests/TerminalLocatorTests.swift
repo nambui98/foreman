@@ -64,6 +64,13 @@ struct ProcessEnvironmentTests {
             buffer[...], environmentKeys: ProcessInspector.terminalEnvironmentKeys)
         #expect(parsed.arguments == ["zsh", "-l"])
         #expect(parsed.environment == ["TERM_PROGRAM": "Orca", "ORCA_TERMINAL_HANDLE": "term_1=2"])
+
+        // Same bytes inside a larger buffer: indices must be relative to the slice.
+        let padded = [0xFF, 0xFF, 0xFF] + buffer
+        let sliced = ProcessInspector.parseProcessArguments(
+            padded[3...], environmentKeys: ProcessInspector.terminalEnvironmentKeys)
+        #expect(sliced.arguments == parsed.arguments)
+        #expect(sliced.environment == parsed.environment)
     }
 
     /// macOS hides the environment of Apple platform binaries (e.g. `/bin/sleep`) from other

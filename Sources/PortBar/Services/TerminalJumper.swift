@@ -16,9 +16,9 @@ enum TerminalJumper {
             activate(bundleID: orcaBundleID)
             return error
         case .appleTerminal(let tty):
-            return focusByTTY(script: appleTerminalScript(tty: tty), bundleID: terminalBundleID)
+            return await focusByTTY(script: appleTerminalScript(tty: tty), bundleID: terminalBundleID)
         case .iTerm(let tty):
-            return focusByTTY(script: iTermScript(tty: tty), bundleID: iTermBundleID)
+            return await focusByTTY(script: iTermScript(tty: tty), bundleID: iTermBundleID)
         case .app(let name):
             return activate(appNamed: name) ? nil : "Không tìm thấy app \(name)"
         }
@@ -39,24 +39,34 @@ enum TerminalJumper {
     }
 
     private nonisolated static func runOrcaSwitch(cli: URL, handle: String) -> String? {
+        guard let result = run(cli, ["terminal", "switch", "--terminal", handle, "--json"]) else {
+            return "Không chạy được orca CLI"
+        }
+        return orcaSwitchError(json: result.output, exitStatus: result.status)
+    }
+
+    /// Runs a helper with a fixed argv (no shell), killing it after `timeout`. Blocking: call off
+    /// the main actor. Output is read before waiting so a full pipe cannot deadlock the child.
+    private nonisolated static func run(
+        _ executable: URL, _ arguments: [String], timeout: DispatchTimeInterval = .seconds(3)
+    ) -> (output: Data, status: Int32)? {
         let process = Process()
-        process.executableURL = cli
-        process.arguments = ["terminal", "switch", "--terminal", handle, "--json"]
+        process.executableURL = executable
+        process.arguments = arguments
         let output = Pipe()
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         do {
             try process.run()
         } catch {
-            return "Không chạy được orca CLI"
+            return nil
         }
-        let deadline = DispatchTime.now() + .seconds(3)
         let timer = DispatchWorkItem { if process.isRunning { process.terminate() } }
-        DispatchQueue.global().asyncAfter(deadline: deadline, execute: timer)
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timer)
         let data = output.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         timer.cancel()
-        return orcaSwitchError(json: data, exitStatus: process.terminationStatus)
+        return (data, process.terminationStatus)
     }
 
     /// nil when Orca reports `"ok": true`; otherwise a short message for the row.
@@ -69,15 +79,19 @@ enum TerminalJumper {
 
     // MARK: Terminal.app / iTerm2
 
-    private static func focusByTTY(script: String, bundleID: String) -> String? {
-        var error: NSDictionary?
-        let result = NSAppleScript(source: script)?.executeAndReturnError(&error)
-        if result?.stringValue == "ok" { return nil }
-        activate(bundleID: bundleID)
-        if let error, let message = error[NSAppleScript.errorMessage] as? String {
-            return "AppleScript: \(message)"
+    /// `osascript` in a background task: a first-use Automation prompt or a busy terminal app must
+    /// not freeze the menu bar UI (the Apple Events are still attributed to PortBar). The 10s limit
+    /// leaves time to answer that prompt; the script itself gives up after 3s.
+    private static func focusByTTY(script: String, bundleID: String) async -> String? {
+        let result = await Task.detached(priority: .userInitiated) {
+            run(URL(fileURLWithPath: "/usr/bin/osascript"), ["-e", script], timeout: .seconds(10))
+        }.value
+        if let result, result.status == 0,
+           String(decoding: result.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines) == "ok" {
+            return nil
         }
-        return "Không thấy tab của agent"
+        activate(bundleID: bundleID)
+        return result?.status == 0 ? "Không thấy tab của agent" : "AppleScript lỗi (cần quyền Automation?)"
     }
 
     /// `tty` is validated as `/dev/ttysNNN` by `TerminalLocator`, so interpolation is safe.
