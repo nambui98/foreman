@@ -29,7 +29,14 @@ Available in **English** (default) and **Vietnamese** — switch in Settings →
 **Requirements:** macOS 26 or later, on Apple silicon (M-series) or Intel — the app is a single Universal binary.
 
 ### Download
-1. Download `Foreman-<version>.zip` from the [latest release](https://github.com/nambui98/foreman/releases/latest).
+1. From the [latest release](https://github.com/nambui98/foreman/releases/latest), download the file for your Mac:
+   | Your Mac | File |
+   |---|---|
+   | Apple silicon (M1, M2, M3, M4…) | `Foreman-<version>-apple-silicon.zip` |
+   | Intel | `Foreman-<version>-intel.zip` |
+   | Not sure / several Macs | `Foreman-<version>-universal.zip` (runs on both) |
+
+   Not sure? Apple menu → About This Mac: "Chip Apple M…" is Apple silicon, "Processor Intel…" is Intel.
 2. Unzip and move `Foreman.app` to `/Applications` (or `~/Applications`).
 3. The app is ad-hoc signed, not notarized, so macOS blocks the first launch. Either right-click the app → **Open**, or run:
    ```sh
@@ -162,7 +169,7 @@ Foreman notifies when an agent **finishes a task** that took at least 20 s (conf
 ```sh
 scripts/build-and-run.sh [Debug|Release]   # regenerate the Xcode project, build, (re)launch
 scripts/test.sh                            # unit tests (Swift Testing)
-scripts/package-release.sh                 # Release build zipped into release/Foreman-<version>.zip
+scripts/package-release.sh                 # Release build → release/Foreman-<version>-{universal,apple-silicon,intel}.zip
 ```
 - `project.yml` is the source of truth (XcodeGen); `Foreman.xcodeproj` is generated and not committed.
 - `Sources/Foreman/Model` — value types; `Services` — data collection, process control, integrations; `UI` — SwiftUI views.
