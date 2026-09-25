@@ -12,7 +12,8 @@ struct AgentRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Circle().fill(statusColor).frame(width: 8, height: 8).padding(.top, 6)
-                .help(agent.status.title + (agent.orcaState != nil ? " · theo Orca" : " · ước lượng theo CPU"))
+                .help(agent.status == .paused ? agent.status.title
+                      : agent.status.title + (agent.orcaState != nil ? " · theo Orca" : " · ước lượng theo CPU"))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(agent.kind.displayName).font(.system(.body, weight: .medium)).lineLimit(1)

@@ -28,6 +28,32 @@ struct OrcaStatusReaderTests {
         #expect(OrcaStatusReader.parse(Data("not json".utf8)).isEmpty)
     }
 
+    @Test func oddEntryShapesDropOnlyThatEntry() {
+        let json = """
+        {"entries": {
+          "good": {"payload": {"state": "working"}, "stateStartedAt": 1790312000000},
+          "payloadString": {"payload": "x", "stateStartedAt": 1790312000000},
+          "payloadNull": {"payload": null, "stateStartedAt": 1790312000000},
+          "startString": {"payload": {"state": "done"}, "stateStartedAt": "soon"},
+          "stateNumber": {"payload": {"state": 3}, "stateStartedAt": 1790312000000},
+          "notAnObject": 42
+        }}
+        """
+        #expect(Set(OrcaStatusReader.parse(Data(json.utf8)).keys) == ["good"])
+    }
+
+    @Test func unreadableRewriteKeepsLastGoodSnapshot() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "orca-status-\(UUID()).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        var reader = OrcaStatusReader(url: url)
+        try Data(Self.sample.utf8).write(to: url)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: 1_000)], ofItemAtPath: url.path)
+        #expect(reader.states().count == 3)
+        try Data(#"{"entries": {"#.utf8).write(to: url)  // truncated mid-write
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: 2_000)], ofItemAtPath: url.path)
+        #expect(reader.states().count == 3)
+    }
+
     @Test func rereadsOnlyWhenTheFileChanges() throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "orca-status-\(UUID()).json")
         defer { try? FileManager.default.removeItem(at: url) }
@@ -130,6 +156,13 @@ struct OrcaNotificationTests {
         center.observe(agents: [agent(.blocked, since: t0 + 40)], now: t0 + 41)
         center.observe(agents: [agent(.blocked, since: t0 + 40)], now: t0 + 60)
         #expect(box.notices.map(\.body) == ["Đang chờ bạn trả lời"])
+    }
+
+    @Test func blockedStraightToDoneStillNotifies() throws {
+        let (center, box) = try setup()
+        center.observe(agents: [agent(.blocked, since: t0)], now: t0)
+        center.observe(agents: [agent(.done, since: t0 + 120)], now: t0 + 121)
+        #expect(box.notices.map(\.kind) == [.stop])
     }
 
     @Test func firstSightingOnlyRecords() throws {

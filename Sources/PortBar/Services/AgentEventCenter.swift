@@ -89,7 +89,8 @@ final class AgentEventCenter {
             if state.phase == .working { anyOrcaWorking = true }
             guard let previous, previous != state else { continue }
             switch (previous.phase, state.phase) {
-            case (.working, .done), (.working, .idle):
+            // From blocked too: the working stretch after the user answered may fall between samples.
+            case (.working, .done), (.working, .idle), (.blocked, .done), (.blocked, .idle):
                 let duration = state.startedAt.timeIntervalSince(previous.startedAt)
                 guard duration >= settings.notifyMinWorkSec else { continue }
                 emit(Notice(agent: id, kind: .stop, title: agent.label,
