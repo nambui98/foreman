@@ -105,24 +105,65 @@ enum ProcessInspector {
 
     /// argv via `KERN_PROCARGS2`: [argc: Int32][exec path\0][\0 padding][argv0\0 argv1\0 …][env…].
     static func arguments(pid: Int32) -> [String] {
+        processArguments(pid: pid, environmentKeys: [])?.arguments ?? []
+    }
+
+    /// Environment keys PortBar may read from other processes: enough to locate an agent's
+    /// terminal tab. Everything else (tokens, secrets) is skipped while parsing and never stored.
+    static let terminalEnvironmentKeys: Set<String> = [
+        "TERM_PROGRAM", "ORCA_TERMINAL_HANDLE", "ITERM_SESSION_ID", "TERM_SESSION_ID",
+    ]
+
+    /// Values of `keys` from the process environment (same `KERN_PROCARGS2` buffer as argv).
+    static func environment(pid: Int32, keys: Set<String> = terminalEnvironmentKeys) -> [String: String] {
+        processArguments(pid: pid, environmentKeys: keys)?.environment ?? [:]
+    }
+
+    private static func processArguments(
+        pid: Int32, environmentKeys: Set<String>
+    ) -> (arguments: [String], environment: [String: String])? {
         var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
         var size = 0
-        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > MemoryLayout<Int32>.size else { return [] }
+        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > MemoryLayout<Int32>.size else { return nil }
         var buffer = [UInt8](repeating: 0, count: size)
-        guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0 else { return [] }
+        guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0 else { return nil }
+        return parseProcessArguments(buffer[..<size], environmentKeys: environmentKeys)
+    }
 
+    /// Parses a `KERN_PROCARGS2` buffer. Only environment entries named in `environmentKeys` are kept.
+    static func parseProcessArguments(
+        _ buffer: ArraySlice<UInt8>, environmentKeys: Set<String>
+    ) -> (arguments: [String], environment: [String: String]) {
+        guard buffer.count > MemoryLayout<Int32>.size else { return ([], [:]) }
         let argc = buffer.withUnsafeBytes { Int($0.loadUnaligned(as: Int32.self)) }
-        var index = MemoryLayout<Int32>.size
-        while index < size, buffer[index] != 0 { index += 1 }  // skip exec path
-        while index < size, buffer[index] == 0 { index += 1 }  // skip padding
+        let end = buffer.endIndex
+        var index = buffer.startIndex + MemoryLayout<Int32>.size
+        while index < end, buffer[index] != 0 { index += 1 }  // skip exec path
+        while index < end, buffer[index] == 0 { index += 1 }  // skip padding
+
+        func nextString() -> ArraySlice<UInt8> {
+            let start = index
+            while index < end, buffer[index] != 0 { index += 1 }
+            defer { index += 1 }
+            return buffer[start..<index]
+        }
 
         var args: [String] = []
-        while args.count < argc, index < size {
-            let start = index
-            while index < size, buffer[index] != 0 { index += 1 }
-            args.append(String(decoding: buffer[start..<index], as: UTF8.self))
-            index += 1
+        while args.count < argc, index < end {
+            args.append(String(decoding: nextString(), as: UTF8.self))
         }
-        return args
+
+        var environment: [String: String] = [:]
+        guard !environmentKeys.isEmpty else { return (args, environment) }
+        while index < end {
+            let entry = nextString()
+            if entry.isEmpty { break }  // environment ends at the first empty string
+            guard let equals = entry.firstIndex(of: UInt8(ascii: "=")) else { continue }
+            let key = String(decoding: entry[..<equals], as: UTF8.self)
+            if environmentKeys.contains(key) {
+                environment[key] = String(decoding: entry[(equals + 1)...], as: UTF8.self)
+            }
+        }
+        return (args, environment)
     }
 }

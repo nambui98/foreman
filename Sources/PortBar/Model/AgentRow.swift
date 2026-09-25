@@ -28,6 +28,7 @@ struct AgentRow: Identifiable, Sendable, Equatable {
     /// Descendant count (tool shells, MCP servers, dev servers…).
     let childCount: Int
     var teamMember: String? = nil
+    var terminal: TerminalLocator? = nil
 
     var id: Int32 { pid }
 

@@ -36,4 +36,6 @@ struct AgentProcess: Sendable, Equatable {
     let host: String?
     /// Agent Team member name from `--agent-id <name>@<team>`, if any.
     var teamMember: String? = nil
+    /// How to focus the agent's terminal tab, when it can be located.
+    var terminal: TerminalLocator? = nil
 }

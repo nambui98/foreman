@@ -140,6 +140,16 @@ final class PortMonitor {
     // Actions take a fresh snapshot (~3ms): the last refresh can be up to 15s old and still list
     // processes that have exited since.
 
+    /// Focuses the agent's terminal tab; a failure is shown on the row (the host app still comes forward).
+    func jumpToTerminal(_ agent: AgentRow) async {
+        guard let locator = agent.terminal else { return }
+        if let message = await TerminalJumper.jump(to: locator) {
+            agentStates[agent.pid] = .failed(message)
+        } else if case .failed = agentStates[agent.pid] {
+            agentStates[agent.pid] = nil
+        }
+    }
+
     func pause(_ agent: AgentRow) async {
         agentController.pause(agentPid: agent.pid, table: .snapshot())
         await refresh()

@@ -14,6 +14,7 @@ enum AgentDetector {
             var host: String?
             var teamMember: String?
             var tty: String?
+            var terminal: TerminalLocator?
         }
         var resolved: [Key: Resolved] = [:]
     }
@@ -44,7 +45,8 @@ enum AgentDetector {
         currentUID: UInt32,
         cache: inout Cache,
         path: (Int32) -> String?,
-        arguments: (Int32) -> [String]
+        arguments: (Int32) -> [String],
+        environment: (Int32) -> [String: String] = { ProcessInspector.environment(pid: $0) }
     ) -> [AgentProcess] {
         var fresh = Cache()
         var kinds: [Int32: AgentKind] = [:]
@@ -78,12 +80,14 @@ enum AgentDetector {
                 resolved.teamMember = teamMember(arguments: arguments(pid))
                 // devname() consults the device database — slow enough to cache.
                 resolved.tty = ProcessInspector.ttyName(device: entry.ttyDevice)
+                resolved.terminal = TerminalLocator.resolve(
+                    environment: environment(pid), host: resolved.host, tty: resolved.tty)
                 fresh.resolved[key] = resolved
             }
             return AgentProcess(
                 pid: pid, kind: kind, startSec: entry.startSec,
                 tty: resolved.tty, host: resolved.host,
-                teamMember: resolved.teamMember)
+                teamMember: resolved.teamMember, terminal: resolved.terminal)
         }
         .sorted { $0.pid < $1.pid }
         cache = fresh  // drops exited processes

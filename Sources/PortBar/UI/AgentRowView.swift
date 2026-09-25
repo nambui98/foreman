@@ -40,6 +40,7 @@ struct AgentRowView: View {
                 Text(Formatters.memory(agent.memoryBytes)).foregroundStyle(.secondary)
             }
             .font(.caption).monospacedDigit()
+            jumpControl
             pauseControl
             stopControl.frame(width: 44)
         }
@@ -47,6 +48,9 @@ struct AgentRowView: View {
         .background(isHovering ? Color.primary.opacity(0.06) : .clear, in: .rect(cornerRadius: 6))
         .onHover { isHovering = $0 }
         .contextMenu {
+            if let terminal = agent.terminal {
+                Button("Mở terminal (\(terminal.appName))") { Task { await monitor.jumpToTerminal(agent) } }
+            }
             Button("Copy PID") {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(String(agent.pid), forType: .string)
@@ -74,6 +78,20 @@ struct AgentRowView: View {
         let uptime = Formatters.uptime(seconds: Int(Date().timeIntervalSince1970) - Int(agent.startSec))
         return [agent.host, agent.tty, uptime, "\(agent.childCount) tiến trình con"]
             .compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private var jumpControl: some View {
+        Button { Task { await monitor.jumpToTerminal(agent) } } label: {
+            Image(systemName: "arrow.up.forward.app").font(.title3)
+        }
+        .buttonStyle(.borderless)
+        .disabled(agent.terminal == nil)
+        .help(agent.terminal.map { locator in
+            switch locator {
+            case .app: "Mở \(locator.appName) (không xác định được tab)"
+            default: "Mở tab terminal của agent trong \(locator.appName)"
+            }
+        } ?? "Không xác định được terminal")
     }
 
     @ViewBuilder private var pauseControl: some View {

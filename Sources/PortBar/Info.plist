@@ -24,5 +24,7 @@
 	<string>public.app-category.developer-tools</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>PortBar chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.</string>
 </dict>
 </plist>

@@ -23,7 +23,8 @@ enum AgentRowBuilder {
             return AgentRow(
                 pid: agent.pid, kind: agent.kind, cwd: tree?.cwd, host: agent.host, tty: agent.tty,
                 startSec: agent.startSec, status: status, cpuPercent: cpu, memoryBytes: tree?.memoryBytes,
-                childCount: tree?.childCount ?? 0, teamMember: agent.teamMember)
+                childCount: tree?.childCount ?? 0, teamMember: agent.teamMember,
+                terminal: agent.terminal)
         }
         .sorted { ($0.status, UInt64.max - ($0.memoryBytes ?? 0), $0.pid) < ($1.status, UInt64.max - ($1.memoryBytes ?? 0), $1.pid) }
     }

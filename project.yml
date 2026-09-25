@@ -29,6 +29,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.developer-tools
+        NSAppleEventsUsageDescription: PortBar chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nambui.portbar
