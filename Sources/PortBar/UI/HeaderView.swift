@@ -1,9 +1,16 @@
 import SwiftUI
 
+/// Which list the panel shows.
+enum PanelTab: String, CaseIterable {
+    case ports = "Cổng"
+    case agents = "Agents"
+}
+
 struct HeaderView: View {
     @Environment(PortMonitor.self) private var monitor
     @Binding var query: String
-    let visibleRows: [PortRow]
+    @Binding var tab: PanelTab
+    let totals: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -19,15 +26,23 @@ struct HeaderView: View {
                 .buttonStyle(.borderless)
                 .help("Làm mới")
             }
-            TextField("Tìm cổng, tên, thư mục…", text: $query)
+            Picker("", selection: $tab) {
+                ForEach(PanelTab.allCases, id: \.self) { tab in
+                    Text(label(for: tab)).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            TextField(tab == .ports ? "Tìm cổng, tên, thư mục…" : "Tìm agent, project, terminal…", text: $query)
                 .textFieldStyle(.roundedBorder)
         }
         .padding(12)
     }
 
-    private var totals: String {
-        let cpu = visibleRows.compactMap(\.cpuPercent).reduce(0, +)
-        let memory = visibleRows.compactMap(\.memoryBytes).reduce(0, +)
-        return "\(visibleRows.count) tiến trình · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))"
+    private func label(for tab: PanelTab) -> String {
+        switch tab {
+        case .ports: "\(tab.rawValue) (\(monitor.rows.count))"
+        case .agents: "\(tab.rawValue) (\(monitor.agents.count))"
+        }
     }
 }

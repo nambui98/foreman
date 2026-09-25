@@ -20,4 +20,12 @@ struct FormattersTests {
         #expect(Formatters.memory(nil) == "—")
         #expect(!Formatters.memory(50 * 1024 * 1024).isEmpty)
     }
+
+    @Test func uptimeFormatting() {
+        #expect(Formatters.uptime(seconds: 45) == "45s")
+        #expect(Formatters.uptime(seconds: 720) == "12m")
+        #expect(Formatters.uptime(seconds: 9_840) == "2h 44m")
+        #expect(Formatters.uptime(seconds: 140_400) == "1d 15h")
+        #expect(Formatters.uptime(seconds: -5) == "0s")
+    }
 }

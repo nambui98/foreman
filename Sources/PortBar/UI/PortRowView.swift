@@ -22,6 +22,10 @@ struct PortRowView: View {
                     Text(detail).font(.caption).foregroundStyle(.secondary)
                         .lineLimit(1).truncationMode(.middle)
                 }
+                if let owner = row.owner {
+                    Label(owner, systemImage: "sparkles").font(.caption2).foregroundStyle(.tint)
+                        .lineLimit(1)
+                }
                 if case .failed(let message) = killState {
                     Text(message).font(.caption).foregroundStyle(.red)
                         .onTapGesture { monitor.dismissError(pid: row.pid) }

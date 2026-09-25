@@ -27,6 +27,8 @@ struct PortRow: Identifiable, Sendable, Equatable {
     let group: ProcessGroup
     /// Signals can only be delivered to processes of the current user (no privilege escalation).
     let isKillable: Bool
+    /// Agent that started this process, e.g. `Claude Code · Zunera`.
+    var owner: String?
 
     var id: Int32 { pid }
 }

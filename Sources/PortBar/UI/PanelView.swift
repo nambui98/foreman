@@ -5,29 +5,71 @@ struct PanelView: View {
     @Environment(PortMonitor.self) private var monitor
     @State private var query = ""
     @State private var expanded: Set<ProcessGroup> = [.dev, .dataContainer]
-    @State private var pendingKill: PendingKill?
+    @State private var confirmation: Confirmation?
+    @State private var tab: PanelTab = .ports
 
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(query: $query, visibleRows: visibleRows)
+            HeaderView(query: $query, tab: $tab, totals: totals)
             Divider()
-            content
+            switch tab {
+            case .ports: content
+            case .agents: agentsContent
+            }
             Divider()
             footer
         }
         .frame(width: 420)
         .onAppear { monitor.setPanelOpen(true) }
         .onDisappear { monitor.setPanelOpen(false) }
-        .confirmationDialog(
-            pendingKill?.title ?? "",
-            isPresented: Binding(get: { pendingKill != nil }, set: { if !$0 { pendingKill = nil } }),
-            presenting: pendingKill
-        ) { pending in
-            Button("Dừng", role: .destructive) {
-                Task { await monitor.kill(pending.row, wholeGroup: pending.wholeGroup, force: pending.force) }
+        .overlay {
+            if let confirmation {
+                ConfirmOverlay(confirmation: confirmation) { self.confirmation = nil }
             }
-        } message: { pending in
-            Text(pending.message)
+        }
+    }
+
+    private var totals: String {
+        switch tab {
+        case .ports:
+            let cpu = visibleRows.compactMap(\.cpuPercent).reduce(0, +)
+            let memory = visibleRows.compactMap(\.memoryBytes).reduce(0, +)
+            return "\(visibleRows.count) tiến trình · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))"
+        case .agents:
+            let cpu = visibleAgents.compactMap(\.cpuPercent).reduce(0, +)
+            let memory = visibleAgents.compactMap(\.memoryBytes).reduce(0, +)
+            return "\(visibleAgents.count) agent · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))"
+        }
+    }
+
+    private var visibleAgents: [AgentRow] {
+        let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !needle.isEmpty else { return monitor.agents }
+        return monitor.agents.filter { agent in
+            [agent.kind.displayName, agent.teamMember, agent.cwd, agent.host, agent.tty, String(agent.pid)]
+                .compactMap { $0?.lowercased() }.contains { $0.contains(needle) }
+        }
+    }
+
+    @ViewBuilder private var agentsContent: some View {
+        if visibleAgents.isEmpty {
+            ContentUnavailableView(query.isEmpty ? "Không có agent nào đang chạy" : "Không tìm thấy",
+                                   systemImage: "sparkles")
+                .frame(height: 200)
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 4) {
+                    ForEach(visibleAgents) { agent in
+                        AgentRowView(agent: agent) { pending in
+                            confirmation = Confirmation(title: pending.title, message: pending.message) {
+                                await monitor.stop(pending.agent)
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            .frame(height: 480)
         }
     }
 
@@ -88,7 +130,11 @@ struct PanelView: View {
 
             if isExpanded {
                 ForEach(rows) { row in
-                    PortRowView(row: row, isSystem: group == .system) { pendingKill = $0 }
+                    PortRowView(row: row, isSystem: group == .system) { pending in
+                        confirmation = Confirmation(title: pending.title, message: pending.message) {
+                            await monitor.kill(pending.row, wholeGroup: pending.wholeGroup, force: pending.force)
+                        }
+                    }
                 }
             }
         }

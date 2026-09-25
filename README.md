@@ -23,9 +23,16 @@ Install: copy `build/Build/Products/Release/PortBar.app` to `~/Applications`.
 - System-section kills ask for confirmation. Other users' / root processes cannot be killed (no privilege escalation).
 - A group that contains an interactive terminal shell is never group-killed, so the terminal session survives.
 
+## Agents tab
+Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose, Amp — with project folder, host app + tty, uptime, status (working / idle / paused) and CPU/RAM summed over the agent's whole process tree.
+- ⏸ **Pause** freezes the agent's child processes (tool commands, MCP servers, dev servers) with SIGSTOP. The agent itself is never stopped: SIGSTOP/SIGCONT on a terminal's foreground job makes the shell take the terminal back and the process dies on its next tty read. Children spawned while paused are paused too; everything is continued when PortBar quits, or on the next launch after a crash.
+- ✕ **Stop** sends SIGTERM to the agent and its whole tree (confirmed, lists every process; Force = SIGKILL). Claude/Codex sessions can be reopened with `claude --resume` / `codex resume`.
+- Port rows show which agent started them (e.g. `Claude Code · my-app`).
+
 ## How it works
 - Ports: `/usr/sbin/lsof +c 0 -nP -iTCP -sTCP:LISTEN -F pcun` (fixed argv, 3s timeout).
 - CPU / RAM / cwd / argv: libproc (`proc_pid_rusage` phys_footprint + CPU ticks → ns via mach timebase, `PROC_PIDVNODEPATHINFO`, `KERN_PROCARGS2`).
+- Agents: one process-table pass (`proc_listallpids` + libproc, sysctl fallback for root-owned links such as `login`), cached per (pid, start time).
 - Refresh: every 2s while the panel is open, every 15s otherwise.
 
 ## License

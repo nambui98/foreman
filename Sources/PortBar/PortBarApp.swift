@@ -1,8 +1,18 @@
 import SwiftUI
 
+/// Resumes every process PortBar paused, so quitting never leaves agent tools frozen.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let monitor = MainActor.assumeIsolated { PortMonitor() }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        MainActor.assumeIsolated { monitor.agentController.resumeAll() }
+    }
+}
+
 @main
 struct PortBarApp: App {
-    @State private var monitor = PortMonitor()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    private var monitor: PortMonitor { delegate.monitor }
 
     var body: some Scene {
         MenuBarExtra {

@@ -5,7 +5,8 @@ enum RowBuilder {
         details: [Int32: ProcessDetails],
         cpuPercent: [Int32: Double],
         currentUID: UInt32,
-        home: String
+        home: String,
+        owners: [Int32: String] = [:]
     ) -> [PortRow] {
         let byPID = Dictionary(grouping: sockets, by: \.pid)
         let rows = byPID.map { pid, sockets -> PortRow in
@@ -25,7 +26,8 @@ enum RowBuilder {
                 group: ProcessClassifier.group(
                     name: name, executablePath: info?.executablePath, uid: uid,
                     currentUID: currentUID, home: home),
-                isKillable: uid == currentUID
+                isKillable: uid == currentUID,
+                owner: owners[pid]
             )
         }
         return rows.sorted { ($0.group, $0.ports.first ?? 0, $0.pid) < ($1.group, $1.ports.first ?? 0, $1.pid) }

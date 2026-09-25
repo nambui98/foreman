@@ -11,6 +11,17 @@ enum Formatters {
         return String(format: percent >= 10 ? "%.0f%%" : "%.1f%%", percent)
     }
 
+    /// Compact elapsed time: `45s`, `12m`, `2h 44m`, `1d 15h`.
+    static func uptime(seconds: Int) -> String {
+        let s = max(seconds, 0)
+        switch s {
+        case ..<60: return "\(s)s"
+        case ..<3600: return "\(s / 60)m"
+        case ..<86_400: return "\(s / 3600)h \(s % 3600 / 60)m"
+        default: return "\(s / 86_400)d \(s % 86_400 / 3600)h"
+        }
+    }
+
     /// `/Users/me/Workspace/app` → `~/Workspace/app`.
     static func abbreviatePath(_ path: String?, home: String = NSHomeDirectory()) -> String? {
         guard let path, path != "/" else { return nil }

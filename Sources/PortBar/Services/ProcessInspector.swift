@@ -30,6 +30,21 @@ enum ProcessInspector {
         return details
     }
 
+    /// Memory footprint and total CPU time (ns) only — the cheap subset used for whole process trees.
+    static func usage(pid: Int32) -> (memoryBytes: UInt64, cpuTimeNs: UInt64)? {
+        guard let usage = resourceUsage(pid: pid) else { return nil }
+        let ticks = usage.ri_user_time &+ usage.ri_system_time
+        return (usage.ri_phys_footprint, ticks &* timebase.numer / timebase.denom)
+    }
+
+    /// `ttys003` for a controlling-terminal device number, nil when the process has none.
+    static func ttyName(device: UInt32) -> String? {
+        guard device != UInt32.max, let name = devname(dev_t(bitPattern: device), mode_t(S_IFCHR)) else {
+            return nil
+        }
+        return String(cString: name)
+    }
+
     static func bsdInfo(pid: Int32) -> proc_bsdinfo? {
         var info = proc_bsdinfo()
         let size = Int32(MemoryLayout<proc_bsdinfo>.size)
@@ -61,14 +76,14 @@ enum ProcessInspector {
         return info.pbi_status != UInt32(SZOMB)
     }
 
-    private static func executablePath(pid: Int32) -> String? {
+    static func executablePath(pid: Int32) -> String? {
         var buffer = [UInt8](repeating: 0, count: 4 * Int(MAXPATHLEN))
         let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
         guard length > 0 else { return nil }
         return String(decoding: buffer.prefix(Int(length)), as: UTF8.self)
     }
 
-    private static func currentDirectory(pid: Int32) -> String? {
+    static func currentDirectory(pid: Int32) -> String? {
         var info = proc_vnodepathinfo()
         let size = Int32(MemoryLayout<proc_vnodepathinfo>.size)
         guard proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &info, size) == size else { return nil }
@@ -89,7 +104,7 @@ enum ProcessInspector {
     }
 
     /// argv via `KERN_PROCARGS2`: [argc: Int32][exec path\0][\0 padding][argv0\0 argv1\0 …][env…].
-    private static func arguments(pid: Int32) -> [String] {
+    static func arguments(pid: Int32) -> [String] {
         var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
         var size = 0
         guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > MemoryLayout<Int32>.size else { return [] }
