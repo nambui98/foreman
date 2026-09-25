@@ -4,8 +4,10 @@
 
 **A macOS menu bar foreman for your dev machine.** One panel shows every listening port, every AI coding agent, and what they left running — and lets you stop, pause, clean up or jump to any of it.
 
-- **Ports** — every listening TCP port with its process, project folder, git branch, CPU and RAM. Stop it in one click.
-- **Agents** — Claude Code, Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose and Amp sessions, with live status (working / waiting for you / idle), process-tree CPU and RAM. Pause, stop, or jump straight to the agent's terminal tab.
+- **Ports** — every listening TCP port with its process, project, framework (Next.js, Vite, Django…), git branch, CPU and RAM — and the Docker / OrbStack containers behind published ports. Stop anything in one click.
+- **Agents** — Claude Code, Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose and Amp sessions, with live status (working / waiting for you / idle), task title, process-tree CPU and RAM, and today's tokens and cost. Pause, stop, or jump straight to the agent's terminal tab.
+- **Usage** — today's Claude tokens with their API-price equivalent, Codex tokens, and Codex's 5-hour and weekly limits.
+- **Keep awake** — the Mac doesn't idle-sleep while an agent is still working.
 - **Notifications** — know when an agent finishes a task or needs your answer, without watching every tab.
 - **Housekeeping** — spots dev servers left behind by closed terminals, removed worktrees or long-idle sessions, and cleans them up after you confirm.
 
@@ -26,7 +28,7 @@ Available in **English** (default) and **Vietnamese** — switch in Settings →
 
 ## Install
 
-**Requirements:** macOS 26 or later, on Apple silicon (M-series) or Intel — the app is a single Universal binary.
+**Requirements:** macOS 14 Sonoma or later (Sonoma, Sequoia, Tahoe), on Apple silicon (M-series) or Intel — the app is a single Universal binary.
 
 ### Download
 1. From the [latest release](https://github.com/nambui98/foreman/releases/latest), download the file for your Mac:
@@ -44,7 +46,7 @@ Available in **English** (default) and **Vietnamese** — switch in Settings →
    ```
 
 ### Build from source
-Needs Xcode 26+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+Needs Xcode 26+ (the app itself targets macOS 14) and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 ```sh
 git clone https://github.com/nambui98/foreman.git && cd foreman
 scripts/build-and-run.sh Release          # builds and launches build/Build/Products/Release/Foreman.app
@@ -67,7 +69,9 @@ Optional: Settings (⌘, or the ⚙︎ in the panel footer) → **General** → 
 ### Ports tab
 Processes are grouped into **Dev** (node, bun, python, …), **Database / Container** (postgres, redis, OrbStack, …) and **System** (other apps and daemons, collapsed).
 
-Each row shows the ports, process name and PID, project folder, git branch (`⑂`), inbound connections (`⇆`), CPU and RAM, and — if an agent started it — which one (`✦ Claude Code · my-app`).
+Each row shows the ports, process name and PID, the detected framework (`Next.js`, `Vite`, `Expo`, `MCP`…), the project and folder inside it (`Zunera › apps/server`), git branch (`⑂`), inbound connections (`⇆`), CPU and RAM, and — if an agent started it — which one (`✦ Claude Code · my-app`). Dev rows are grouped by project.
+
+**Containers.** The OrbStack / Docker row lists each container publishing a port — name, compose project, image, `:5434→5432` — with restart and a confirmed stop.
 
 | Action | How |
 |---|---|
@@ -92,7 +96,9 @@ When any exist, **Clean up (N)** appears in the header: tick what to stop (orpha
 | ⚪ **Idle** | Turn finished, waiting for your next prompt |
 | 🟠 **Paused** | Its child processes are paused by Foreman |
 
-Hover the status dot to see where it came from: *from Orca* (exact, from Orca's agent hooks) or *estimated from CPU* (process-tree CPU, for agents outside Orca).
+Hover the status dot to see where it came from: *from Orca* (Orca's agent hooks), *from Claude Code* (Claude Code's own session file, for Claude outside Orca) or *estimated from CPU* (process-tree CPU, for other agents).
+
+Agents in Orca also show their **task title** (the tab title Claude gives the session). Each Claude agent shows **today's cost**; hover it for the token count. The top of the tab sums up the day: Claude tokens and their API-price equivalent (a subscription is not billed per token), Codex tokens, and Codex's 5-hour / weekly limit gauges.
 
 | Action | What it does |
 |---|---|
@@ -135,7 +141,8 @@ Foreman notifies when an agent **finishes a task** that took at least 20 s (conf
 | | Icon turns orange when dev RAM reaches | 8 GB (0 = off) |
 | Ports | Editor for *Open in …* | first installed of Cursor, VS Code, Zed, Sublime Text, Xcode |
 | | A quiet dev server counts as idle after | 2 h |
-| Agents | Notifications | on |
+| Agents | Keep the Mac awake while an agent works | on |
+| | Notifications | on |
 | | Only notify for tasks of at least | 20 s |
 | | Without hooks: done after this much idle CPU | 30 s |
 
@@ -144,14 +151,18 @@ Foreman notifies when an agent **finishes a task** that took at least 20 s (conf
 - Signal itself, launchd, or its own ancestors; group-kill a group that contains an interactive terminal shell (your terminal session survives).
 - SIGSTOP an agent itself: pausing a terminal's foreground job makes the shell take the terminal back and the agent dies on its next read. Only its children are paused.
 - Stop anything from the *System* section, a process group, an agent tree or a cleanup batch without asking first. Before each cleanup signal it re-checks the process start time, so a recycled PID is never hit.
-- Read your prompts or transcripts. From other processes it reads only an allowlist of environment keys (`TERM_PROGRAM`, `ORCA_TERMINAL_HANDLE`, `ORCA_PANE_KEY`, `ITERM_SESSION_ID`, `TERM_SESSION_ID`); from Orca's status file, only the state fields.
+- Read your prompts or messages. From transcripts (`~/.claude/projects`, `~/.codex/sessions`) it reads only token counts, model, session id and time — lines are scanned as bytes and only the `usage` object is decoded. From other processes it reads only an allowlist of environment keys (`TERM_PROGRAM`, `ORCA_TERMINAL_HANDLE`, `ORCA_PANE_KEY`, `ITERM_SESSION_ID`, `TERM_SESSION_ID`); from Orca's status file and Claude's session files, only the state fields.
 - Edit your agent configuration files.
 
 ## How it works
 - **Ports:** `/usr/sbin/lsof +c 0 -nP -iTCP -sTCP:LISTEN,ESTABLISHED -F pcunT` (fixed argv, 3 s timeout). Established sockets on a listening port count as inbound connections.
 - **Processes:** libproc and sysctl only — `proc_pid_rusage` (physical footprint, CPU time), `PROC_PIDVNODEPATHINFO` (working folder), `KERN_PROCARGS2` (argv and the allowlisted environment keys).
 - **Agents:** one process-table pass (`proc_listallpids`), results cached per (PID, start time). Status comes from Orca's `~/Library/Application Support/Orca/agent-hooks/last-status.json` (matched by the agent's `ORCA_PANE_KEY`, re-read only when it changes), else from process-tree CPU ≥ 10%.
-- **Git branch:** read from `.git/HEAD` (worktrees included), no `git` process; cached 10 s per folder.
+- **Git branch and project:** read from `.git/HEAD` (worktrees included), no `git` process; cached 10 s per folder.
+- **Containers:** `docker ps` (OrbStack or Docker Desktop CLI, fixed paths) every 5 s while the panel is open, every 60 s otherwise — only when a container host process is listening.
+- **Usage:** transcripts changed today are followed by byte offset (first pass over ~270 MB ≈ 0.7 s, then a few ms), deduplicated by message and request id, priced at API list prices; only while the panel is open.
+- **Keep awake:** an IOKit `PreventUserIdleSystemSleep` assertion, held only while an agent is working.
+- **Task titles:** `orca terminal list` every 10 s while the panel is open.
 - **Refresh:** every 2 s while the panel is open, every 15 s otherwise; agent-only passes (no lsof) every 3 s while an agent is working, so notifications stay prompt.
 - **Cost:** ~0.6 % CPU and ~19 MB memory with the panel closed and 25 agents running (measured on the author's machine).
 
