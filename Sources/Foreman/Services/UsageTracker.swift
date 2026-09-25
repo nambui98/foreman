@@ -166,7 +166,7 @@ struct UsageTracker: Sendable {
             while start < buffer.count {
                 let end = memchr(base + start, 0x0A, buffer.count - start).map { base.distance(to: UnsafeRawPointer($0)) } ?? buffer.count
                 let line = UnsafeRawBufferPointer(start: base + start, count: end - start)
-                if memmem(line.baseAddress, line.count, pattern, pattern.count) != nil { body(line) }
+                if line.count > 0, memmem(line.baseAddress, line.count, pattern, pattern.count) != nil { body(line) }
                 start = end + 1
             }
         }
@@ -269,7 +269,10 @@ struct UsageTracker: Sendable {
         defer { try? handle.close() }
         var offset = offsets[file.path] ?? 0
         let size = (try? handle.seekToEnd()) ?? 0
-        if size < offset { offset = 0 }  // truncated or replaced
+        if size < offset {  // truncated or replaced: start over, including Codex totals for it
+            offset = 0
+            codexFiles[file.path] = nil
+        }
         guard size > offset, (try? handle.seek(toOffset: offset)) != nil,
               let data = try? handle.readToEnd(), let lastNewline = data.lastIndex(of: 0x0A) else { return nil }
         let complete = data[...lastNewline]

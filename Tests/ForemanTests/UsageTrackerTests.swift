@@ -84,6 +84,20 @@ struct UsageTrackerTests {
         #expect(snapshot.codexLimits?.secondary?.windowMinutes == 10_080)
     }
 
+    @Test func dayStartsAtLocalMidnight() throws {
+        let (claudeRoot, codexRoot) = try makeRoots()
+        defer { try? FileManager.default.removeItem(at: claudeRoot.deletingLastPathComponent()) }
+        var saigon = Calendar(identifier: .gregorian)
+        saigon.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")!  // UTC+7: local midnight = 17:00Z
+        let file = claudeRoot.appending(path: "-Users-me-app/s3.jsonl")
+        try [claudeLine(id: "msg_before", request: "r", session: "s3", time: "2026-09-24T16:59:59.000Z", output: 1),
+             claudeLine(id: "msg_after", request: "r", session: "s3", time: "2026-09-24T17:00:00.000Z", output: 2)]
+            .joined(separator: "\n").appending("\n").write(to: file, atomically: true, encoding: .utf8)
+        var tracker = UsageTracker(claudeRoot: claudeRoot, codexRoot: codexRoot)
+        let localMorning = ISO8601DateFormatter().date(from: "2026-09-24T20:00:00Z")!  // 03:00 on the 25th in Saigon
+        #expect(tracker.update(now: localMorning, calendar: saigon).claudeTotal.output == 2)
+    }
+
     @Test func pricingAndFormatting() {
         #expect(ModelPricing.price(for: "claude-haiku-4-5-20251001")?.input == 1)
         #expect(ModelPricing.price(for: "claude-opus-5-5")?.cacheRead == 0.20)
