@@ -3,4 +3,4 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 xcodegen generate --quiet
-xcodebuild -project PortBar.xcodeproj -scheme PortBar -derivedDataPath build -quiet test
+xcodebuild -project Foreman.xcodeproj -scheme Foreman -derivedDataPath build -quiet test

@@ -1,4 +1,4 @@
-name: PortBar
+name: Foreman
 options:
   bundleIdPrefix: com.nambui
   deploymentTarget:
@@ -7,7 +7,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -16,46 +16,46 @@ settings:
     ENABLE_APP_SANDBOX: NO
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
 targets:
-  PortBar:
+  Foreman:
     type: application
     platform: macOS
-    sources: [Sources/PortBar]
+    sources: [Sources/Foreman]
     info:
-      path: Sources/PortBar/Info.plist
+      path: Sources/Foreman/Info.plist
       properties:
-        CFBundleName: PortBar
-        CFBundleDisplayName: PortBar
+        CFBundleName: Foreman
+        CFBundleDisplayName: Foreman
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.developer-tools
         CFBundleURLTypes:
-          - CFBundleURLName: com.nambui.portbar.agent-event
-            CFBundleURLSchemes: [portbar]
+          - CFBundleURLName: com.nambui.foreman.agent-event
+            CFBundleURLSchemes: [foreman]
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        NSAppleEventsUsageDescription: PortBar chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.
+        NSAppleEventsUsageDescription: Foreman chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.portbar
+        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.foreman
         GENERATE_INFOPLIST_FILE: NO
-  PortBarTests:
+  ForemanTests:
     type: bundle.unit-test
     platform: macOS
-    sources: [Tests/PortBarTests]
+    sources: [Tests/ForemanTests]
     dependencies:
-      - target: PortBar
+      - target: Foreman
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.portbar.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.nambui.foreman.tests
         BUNDLE_LOADER: $(TEST_HOST)
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/PortBar.app/Contents/MacOS/PortBar
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Foreman.app/Contents/MacOS/Foreman
 schemes:
-  PortBar:
+  Foreman:
     build:
       targets:
-        PortBar: all
-        PortBarTests: [test]
+        Foreman: all
+        ForemanTests: [test]
     test:
-      targets: [PortBarTests]
+      targets: [ForemanTests]
