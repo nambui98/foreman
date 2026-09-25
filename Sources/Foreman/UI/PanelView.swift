@@ -27,6 +27,7 @@ struct PanelView: View {
             footer
         }
         .frame(width: 420)
+        .background(PanelWindowAnchor())
         .onAppear { monitor.setPanelOpen(true) }
         .onDisappear { monitor.setPanelOpen(false) }
         .overlay {
