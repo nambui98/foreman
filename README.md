@@ -26,7 +26,7 @@ Available in **English** (default) and **Vietnamese** — switch in Settings →
 
 ## Install
 
-**Requirements:** macOS 26 or later.
+**Requirements:** macOS 26 or later, on Apple silicon (M-series) or Intel — the app is a single Universal binary.
 
 ### Download
 1. Download `Foreman-<version>.zip` from the [latest release](https://github.com/nambui98/foreman/releases/latest).

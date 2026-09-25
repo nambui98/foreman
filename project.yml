@@ -16,6 +16,11 @@ settings:
     ENABLE_HARDENED_RUNTIME: NO
     ENABLE_APP_SANDBOX: NO
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+  configs:
+    # Universal app: one binary for Apple silicon and Intel Macs.
+    Release:
+      ARCHS: "arm64 x86_64"
+      ONLY_ACTIVE_ARCH: NO
 targets:
   Foreman:
     type: application
