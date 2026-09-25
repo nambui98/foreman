@@ -31,16 +31,16 @@ Available in **English** (default) and **Vietnamese** — switch in Settings →
 **Requirements:** macOS 14 Sonoma or later (Sonoma, Sequoia, Tahoe), on Apple silicon (M-series) or Intel — the app is a single Universal binary.
 
 ### Download
-1. From the [latest release](https://github.com/nambui98/foreman/releases/latest), download the file for your Mac:
+1. From the [latest release](https://github.com/nambui98/foreman/releases/latest), download the disk image for your Mac:
    | Your Mac | File |
    |---|---|
-   | Apple silicon (M1, M2, M3, M4…) | `Foreman-<version>-apple-silicon.zip` |
-   | Intel | `Foreman-<version>-intel.zip` |
-   | Not sure / several Macs | `Foreman-<version>-universal.zip` (runs on both) |
+   | Apple silicon (M1, M2, M3, M4…) | `Foreman-<version>-apple-silicon.dmg` |
+   | Intel | `Foreman-<version>-intel.dmg` |
+   | Not sure / several Macs | `Foreman-<version>-universal.dmg` (runs on both) |
 
    Not sure? Apple menu → About This Mac: "Chip Apple M…" is Apple silicon, "Processor Intel…" is Intel.
-2. Unzip and move `Foreman.app` to `/Applications` (or `~/Applications`).
-3. The app is ad-hoc signed, not notarized, so macOS blocks the first launch. Either right-click the app → **Open**, or run:
+2. Open the `.dmg` and drag **Foreman** onto **Applications**.
+3. The app is ad-hoc signed, not notarized, so macOS blocks the first launch. Open it once with right-click → **Open** (on macOS 15+: System Settings → Privacy & Security → **Open Anyway**), or run:
    ```sh
    xattr -dr com.apple.quarantine /Applications/Foreman.app
    ```
@@ -180,7 +180,7 @@ Foreman notifies when an agent **finishes a task** that took at least 20 s (conf
 ```sh
 scripts/build-and-run.sh [Debug|Release]   # regenerate the Xcode project, build, (re)launch
 scripts/test.sh                            # unit tests (Swift Testing)
-scripts/package-release.sh                 # Release build → release/Foreman-<version>-{universal,apple-silicon,intel}.zip
+scripts/package-release.sh                 # Release build → release/Foreman-<version>-{apple-silicon,intel,universal}.dmg
 ```
 - `project.yml` is the source of truth (XcodeGen); `Foreman.xcodeproj` is generated and not committed.
 - `Sources/Foreman/Model` — value types; `Services` — data collection, process control, integrations; `UI` — SwiftUI views.
