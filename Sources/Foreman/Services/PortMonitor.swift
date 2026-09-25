@@ -188,7 +188,8 @@ final class PortMonitor {
         }
         let portDetails = Dictionary(uniqueKeysWithValues: portPids.map { pid in
             var details = ProcessInspector.details(pid: pid)
-            details.gitBranch = details.cwd.flatMap { branches.branch(cwd: $0) }
+            details.repository = details.cwd.flatMap { branches.repository(cwd: $0) }
+            details.gitBranch = details.repository?.branch
             if let cwd = details.cwd { folders.insert(cwd) }
             return (pid, details)
         })

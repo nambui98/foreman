@@ -19,6 +19,11 @@ struct PortRowView: View {
                 HStack(spacing: 4) {
                     Text(row.name).font(.system(.body, weight: .medium)).lineLimit(1)
                     Text(verbatim: String(row.pid)).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
+                    if let framework = row.framework {
+                        Text(verbatim: framework).font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(.tint.opacity(0.12), in: .capsule).foregroundStyle(.tint)
+                    }
                     ForEach(row.flags.sorted(by: { $0.isOrphan && !$1.isOrphan }), id: \.self) { flag in
                         FlagBadge(flag: flag, row: row)
                     }
@@ -30,7 +35,16 @@ struct PortRowView: View {
                 }
                 if let detail = Formatters.abbreviatePath(row.cwd) ?? row.commandLine {
                     HStack(spacing: 4) {
-                        Text(detail).lineLimit(1).truncationMode(.middle)
+                        if let project = row.project {
+                            // `Zunera › apps/server` reads better than a long absolute path.
+                            Text(verbatim: project).fontWeight(.semibold).foregroundStyle(.primary).lineLimit(1)
+                            if let sub = row.projectSubpath {
+                                Text(verbatim: "› \(sub)").lineLimit(1).truncationMode(.middle)
+                            }
+                        } else {
+                            Text(detail).lineLimit(1).truncationMode(.middle)
+                        }
+
                         if let branch = row.gitBranch {
                             BranchLabel(branch: branch)
                         }

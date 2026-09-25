@@ -6,13 +6,17 @@ enum GitBranch {
     /// Branches per folder, re-read at most every `lifetime` so frequent agent passes cost nothing.
     struct Cache: Sendable {
         static let lifetime: UInt64 = 10_000_000_000  // ns
-        private var entries: [String: (branch: String?, readAtNs: UInt64)] = [:]
+        private var entries: [String: (repo: Repository?, readAtNs: UInt64)] = [:]
 
         mutating func branch(cwd: String, nowNs: UInt64 = DispatchTime.now().uptimeNanoseconds) -> String? {
-            if let entry = entries[cwd], nowNs &- entry.readAtNs < Self.lifetime { return entry.branch }
-            let branch = GitBranch.resolve(cwd: cwd)
-            entries[cwd] = (branch, nowNs)
-            return branch
+            repository(cwd: cwd, nowNs: nowNs)?.branch
+        }
+
+        mutating func repository(cwd: String, nowNs: UInt64 = DispatchTime.now().uptimeNanoseconds) -> Repository? {
+            if let entry = entries[cwd], nowNs &- entry.readAtNs < Self.lifetime { return entry.repo }
+            let repo = GitBranch.repository(cwd: cwd)
+            entries[cwd] = (repo, nowNs)
+            return repo
         }
 
         /// Forgets folders no process uses any more.
@@ -21,14 +25,33 @@ enum GitBranch {
         }
     }
 
+    /// The checkout containing a folder: its root (the project) and current branch.
+    struct Repository: Sendable, Equatable {
+        let root: String
+        let branch: String?
+
+        /// `Zunera` for any folder inside `~/…/Zunera`.
+        var name: String { URL(fileURLWithPath: root).lastPathComponent }
+
+        /// `apps/server` for `<root>/apps/server`; nil at the root itself.
+        func subpath(of cwd: String) -> String? {
+            guard cwd.hasPrefix(root + "/") else { return nil }
+            return String(cwd.dropFirst(root.count + 1))
+        }
+    }
+
     static func resolve(cwd: String) -> String? {
+        repository(cwd: cwd)?.branch
+    }
+
+    static func repository(cwd: String) -> Repository? {
         guard cwd != "/" else { return nil }
         var dir = URL(fileURLWithPath: cwd, isDirectory: true)
         while dir.path != "/" {
             let dotGit = dir.appending(path: ".git")
             if let head = headFile(dotGit: dotGit, in: dir),
                let contents = try? String(contentsOf: head, encoding: .utf8) {
-                return branch(headContents: contents)
+                return Repository(root: dir.path, branch: branch(headContents: contents))
             }
             dir.deleteLastPathComponent()
         }

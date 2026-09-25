@@ -35,6 +35,11 @@ struct PortRow: Identifiable, Sendable, Equatable {
     var startSec: UInt64?
     var flags: Set<RowFlag> = []
     var gitBranch: String?
+    /// Project (git checkout name) and the folder inside it, e.g. `Zunera` + `apps/server`.
+    var project: String?
+    var projectSubpath: String?
+    /// Dev tool detected from argv, e.g. `Next.js`, `Vite`.
+    var framework: String?
 
     var id: Int32 { pid }
 }

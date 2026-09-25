@@ -16,4 +16,6 @@ struct ProcessDetails: Sendable, Equatable {
     var sampledAtNs: UInt64 = 0
     /// Branch of the git checkout containing `cwd`, if any.
     var gitBranch: String?
+    /// Git checkout containing `cwd` (the project), if any.
+    var repository: GitBranch.Repository?
 }

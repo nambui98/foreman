@@ -34,10 +34,18 @@ enum RowBuilder {
                 // Outbound connections (the process as a client) have a local port it does not listen on.
                 inboundConnections: established[pid, default: []].count(where: ports.contains),
                 startSec: startSec[pid],
-                gitBranch: info?.gitBranch
+                gitBranch: info?.gitBranch,
+                project: info?.repository?.name,
+                projectSubpath: info.flatMap { info in info.cwd.flatMap { info.repository?.subpath(of: $0) } },
+                framework: FrameworkDetector.detect(arguments: info?.arguments ?? [], name: name)
             )
         }
-        return rows.sorted { ($0.group, $0.ports.first ?? 0, $0.pid) < ($1.group, $1.ports.first ?? 0, $1.pid) }
+        // Dev servers of the same project sit together; everything else stays in port order.
+        return rows.sorted {
+            let lhsProject = $0.group == .dev ? ($0.project ?? "~").lowercased() : ""
+            let rhsProject = $1.group == .dev ? ($1.project ?? "~").lowercased() : ""
+            return ($0.group, lhsProject, $0.ports.first ?? 0, $0.pid) < ($1.group, rhsProject, $1.ports.first ?? 0, $1.pid)
+        }
     }
 
     /// `/opt/…/bin/node /path/vite --port 5173` → `node /path/vite --port 5173`.
