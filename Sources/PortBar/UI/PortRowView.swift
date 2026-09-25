@@ -4,11 +4,13 @@ import SwiftUI
 /// One process row: ports, name, command/cwd, CPU/RAM and kill actions.
 struct PortRowView: View {
     @Environment(PortMonitor.self) private var monitor
+    @Environment(AppSettings.self) private var settings
     let row: PortRow
     /// System-section rows confirm every kill; all rows confirm whole-group kills.
     let isSystem: Bool
     let requestConfirmation: (PendingKill) -> Void
     @State private var isHovering = false
+    @State private var probes: [Int: ProbeResult] = [:]
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -27,8 +29,13 @@ struct PortRowView: View {
                     }
                 }
                 if let detail = Formatters.abbreviatePath(row.cwd) ?? row.commandLine {
-                    Text(detail).font(.caption).foregroundStyle(.secondary)
-                        .lineLimit(1).truncationMode(.middle)
+                    HStack(spacing: 4) {
+                        Text(detail).lineLimit(1).truncationMode(.middle)
+                        if let branch = row.gitBranch {
+                            Label(branch, systemImage: "arrow.triangle.branch").lineLimit(1).layoutPriority(-1)
+                        }
+                    }
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 if let owner = row.owner {
                     Label(owner, systemImage: "sparkles").font(.caption2).foregroundStyle(.tint)
@@ -50,7 +57,10 @@ struct PortRowView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .background(isHovering ? Color.primary.opacity(0.06) : .clear, in: .rect(cornerRadius: 6))
-        .onHover { isHovering = $0 }
+        .onHover { hovering in
+            isHovering = hovering
+            if hovering { probePorts() }
+        }
         .help(row.commandLine ?? row.executablePath ?? row.name)
         .contextMenu { contextMenu }
     }
@@ -79,11 +89,13 @@ struct PortRowView: View {
                 Image(systemName: "safari").font(.title3)
             }
             .buttonStyle(.borderless)
-            .help("Mở http://localhost:\(String(port))")
+            .help("Mở http://localhost:\(String(port))" + (probes[port].map { "\n\($0.summary)" } ?? ""))
         } else {
             Menu {
                 ForEach(row.ports, id: \.self) { port in
-                    Button("localhost:\(String(port))") { Self.openInBrowser(port) }
+                    Button("localhost:\(String(port))" + (probes[port].map { " — \($0.summary)" } ?? "")) {
+                        Self.openInBrowser(port)
+                    }
                 }
             } label: {
                 Image(systemName: "safari").font(.title3)
@@ -136,9 +148,20 @@ struct PortRowView: View {
             NSPasteboard.general.setString(String(row.pid), forType: .string)
         }
         if let cwd = row.cwd, cwd != "/" {
+            if let editor = EditorLauncher.preferred(bundleID: settings.editorBundleID) {
+                Button("Mở trong \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
+            }
             Button("Mở thư mục trong Finder") {
                 NSWorkspace.shared.open(URL(fileURLWithPath: cwd, isDirectory: true))
             }
+        }
+    }
+
+    /// Hovering a dev row looks at what its ports serve (cached 30s, 1.5s timeout, off the main actor).
+    private func probePorts() {
+        guard row.group == .dev else { return }
+        for port in row.ports.prefix(3) where probes[port] == nil {
+            Task { probes[port] = await PortProbe.shared.probe(port: port) }
         }
     }
 

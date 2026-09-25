@@ -33,7 +33,8 @@ enum RowBuilder {
                 owner: owners[pid],
                 // Outbound connections (the process as a client) have a local port it does not listen on.
                 inboundConnections: established[pid, default: []].count(where: ports.contains),
-                startSec: startSec[pid]
+                startSec: startSec[pid],
+                gitBranch: info?.gitBranch
             )
         }
         return rows.sorted { ($0.group, $0.ports.first ?? 0, $0.pid) < ($1.group, $1.ports.first ?? 0, $1.pid) }

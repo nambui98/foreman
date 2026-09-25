@@ -159,7 +159,9 @@ final class PortMonitor {
         var usage: [Int32: AgentTreeUsage] = [:]
         for agent in agents {
             let members = table.descendants(of: agent.pid)
-            var tree = AgentTreeUsage(childCount: members.count, cwd: ProcessInspector.currentDirectory(pid: agent.pid))
+            let cwd = ProcessInspector.currentDirectory(pid: agent.pid)
+            var tree = AgentTreeUsage(
+                childCount: members.count, cwd: cwd, gitBranch: cwd.flatMap(GitBranch.resolve(cwd:)))
             for pid in [agent.pid] + members {
                 guard let sample = ProcessInspector.usage(pid: pid) else { continue }
                 tree.memoryBytes += sample.memoryBytes
@@ -168,7 +170,11 @@ final class PortMonitor {
             tree.sampledAtNs = DispatchTime.now().uptimeNanoseconds
             usage[agent.pid] = tree
         }
-        let portDetails = Dictionary(uniqueKeysWithValues: portPids.map { ($0, ProcessInspector.details(pid: $0)) })
+        let portDetails = Dictionary(uniqueKeysWithValues: portPids.map { pid in
+            var details = ProcessInspector.details(pid: pid)
+            details.gitBranch = details.cwd.flatMap(GitBranch.resolve(cwd:))
+            return (pid, details)
+        })
         return Snapshot(table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache)
     }
 

@@ -32,6 +32,8 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.nambui.portbar.agent-event
             CFBundleURLSchemes: [portbar]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         NSAppleEventsUsageDescription: PortBar chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.
     settings:
       base:

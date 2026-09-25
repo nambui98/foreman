@@ -18,7 +18,8 @@ Install: copy `build/Build/Products/Release/PortBar.app` to `~/Applications`.
 ## Using it
 - Sections: **Dev** (node, bun, python, …), **Database / Container** (postgres, redis, OrbStack, …), **Hệ thống** (other apps/daemons, collapsed).
 - ✕ sends SIGTERM; if still alive after 3s a **Force** button sends SIGKILL. ⌥-click ✕ = SIGKILL immediately.
-- 🧭 opens `http://localhost:PORT` in the browser to see what it is (a menu when there are several ports).
+- 🧭 opens `http://localhost:PORT` in the browser (a menu when there are several ports). Hovering a Dev row probes the port once (1.5s timeout, cached 30s, redirects not followed): the tooltip / menu shows e.g. `200 · Vite App`.
+- Rows show the git branch of their folder (read from `HEAD`, no `git` process). Right-click → **Mở trong Cursor** (editor chosen in Settings among installed Cursor / VS Code / Zed / Sublime Text / Xcode).
 - Right-click a row: kill whole process group (always confirmed, lists members), open `localhost:PORT`, copy PID, open folder in Finder.
 - System-section kills ask for confirmation. Other users' / root processes cannot be killed (no privilege escalation).
 - A group that contains an interactive terminal shell is never group-killed, so the terminal session survives.

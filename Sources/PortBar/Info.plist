@@ -35,6 +35,11 @@
 	<string>public.app-category.developer-tools</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>PortBar chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.</string>
 </dict>

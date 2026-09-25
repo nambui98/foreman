@@ -29,6 +29,7 @@ struct AgentRow: Identifiable, Sendable, Equatable {
     let childCount: Int
     var teamMember: String? = nil
     var terminal: TerminalLocator? = nil
+    var gitBranch: String? = nil
 
     var id: Int32 { pid }
 

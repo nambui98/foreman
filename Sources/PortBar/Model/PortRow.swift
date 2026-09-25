@@ -34,6 +34,7 @@ struct PortRow: Identifiable, Sendable, Equatable {
     /// Process start time (seconds since epoch); also guards cleanup against PID reuse.
     var startSec: UInt64?
     var flags: Set<RowFlag> = []
+    var gitBranch: String?
 
     var id: Int32 { pid }
 }

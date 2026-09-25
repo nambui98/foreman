@@ -14,4 +14,6 @@ struct ProcessDetails: Sendable, Equatable {
     var cpuTimeNs: UInt64?
     /// Monotonic timestamp (ns) taken when `cpuTimeNs` was read.
     var sampledAtNs: UInt64 = 0
+    /// Branch of the git checkout containing `cwd`, if any.
+    var gitBranch: String?
 }

@@ -4,6 +4,7 @@ import SwiftUI
 /// One agent: status, project, host/tty/uptime, tree CPU/RAM, pause/resume and stop.
 struct AgentRowView: View {
     @Environment(PortMonitor.self) private var monitor
+    @Environment(AppSettings.self) private var settings
     let agent: AgentRow
     let requestStop: (PendingAgentStop) -> Void
     @State private var isHovering = false
@@ -26,7 +27,13 @@ struct AgentRowView: View {
                     }
                 }
                 if let cwd = Formatters.abbreviatePath(agent.cwd) {
-                    Text(cwd).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    HStack(spacing: 4) {
+                        Text(cwd).lineLimit(1).truncationMode(.middle)
+                        if let branch = agent.gitBranch {
+                            Label(branch, systemImage: "arrow.triangle.branch").lineLimit(1).layoutPriority(-1)
+                        }
+                    }
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 Text(context).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
                 if case .failed(let message) = state {
@@ -56,6 +63,9 @@ struct AgentRowView: View {
                 NSPasteboard.general.setString(String(agent.pid), forType: .string)
             }
             if let cwd = agent.cwd {
+                if let editor = EditorLauncher.preferred(bundleID: settings.editorBundleID) {
+                    Button("Mở trong \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
+                }
                 Button("Mở thư mục trong Finder") {
                     NSWorkspace.shared.open(URL(fileURLWithPath: cwd, isDirectory: true))
                 }

@@ -38,6 +38,14 @@ struct SettingsView: View {
     @ViewBuilder private var portsSection: some View {
         @Bindable var settings = settings
         Section("Cổng") {
+            Picker("Mở thư mục bằng", selection: $settings.editorBundleID) {
+                ForEach(EditorLauncher.installed()) { editor in
+                    Text(editor.name).tag(Optional(editor.bundleID))
+                }
+            }
+            .onAppear {
+                if settings.editorBundleID == nil { settings.editorBundleID = EditorLauncher.preferred(bundleID: nil)?.bundleID }
+            }
             Stepper("Dev server coi là rảnh sau \(Int(settings.idleHours)) giờ không có kết nối",
                     value: $settings.idleHours, in: 1...72, step: 1)
         }
