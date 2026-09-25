@@ -3,6 +3,7 @@ import SwiftUI
 /// Content of the menu bar window: header, grouped rows, footer.
 struct PanelView: View {
     @Environment(PortMonitor.self) private var monitor
+    @Environment(\.openSettings) private var openSettings
     @State private var query = ""
     @State private var expanded: Set<ProcessGroup> = [.dev, .dataContainer]
     @State private var confirmation: Confirmation?
@@ -147,6 +148,16 @@ struct PanelView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
+            Button {
+                // A menu bar (LSUIElement) app must activate itself or Settings opens behind other apps.
+                NSApp.activate()
+                openSettings()
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .buttonStyle(.borderless)
+            .help("Cài đặt")
+            .keyboardShortcut(",")
             Button("Thoát") { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut("q")
         }

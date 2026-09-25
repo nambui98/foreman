@@ -3,6 +3,7 @@ import SwiftUI
 /// Resumes every process PortBar paused, so quitting never leaves agent tools frozen.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = MainActor.assumeIsolated { PortMonitor() }
+    let settings = MainActor.assumeIsolated { AppSettings() }
 
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated { monitor.agentController.resumeAll() }
@@ -18,6 +19,7 @@ struct PortBarApp: App {
         MenuBarExtra {
             PanelView()
                 .environment(monitor)
+                .environment(delegate.settings)
         } label: {
             BadgeLabel(count: monitor.devCount)
                 .task {
@@ -27,5 +29,10 @@ struct PortBarApp: App {
                 }
         }
         .menuBarExtraStyle(.window)
+
+        Settings {
+            SettingsView()
+                .environment(delegate.settings)
+        }
     }
 }
