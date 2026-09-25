@@ -12,7 +12,7 @@ struct AgentRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Circle().fill(statusColor).frame(width: 8, height: 8).padding(.top, 6)
-                .help(agent.status.title)
+                .help(agent.status.title + (agent.orcaState != nil ? " · theo Orca" : " · ước lượng theo CPU"))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(agent.kind.displayName).font(.system(.body, weight: .medium)).lineLimit(1)
@@ -20,10 +20,10 @@ struct AgentRowView: View {
                         Text(member).font(.caption).foregroundStyle(.tint).lineLimit(1)
                     }
                     Text(verbatim: String(agent.pid)).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
-                    if agent.status == .paused {
-                        Text("Tạm dừng").font(.caption2.weight(.semibold))
+                    if agent.status == .paused || agent.status == .waiting {
+                        Text(agent.status.title).font(.caption2.weight(.semibold))
                             .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(.orange.opacity(0.2), in: .capsule).foregroundStyle(.orange)
+                            .background(statusColor.opacity(0.2), in: .capsule).foregroundStyle(statusColor)
                     }
                 }
                 if let cwd = Formatters.abbreviatePath(agent.cwd) {
@@ -77,6 +77,7 @@ struct AgentRowView: View {
 
     private var statusColor: Color {
         switch agent.status {
+        case .waiting: .yellow
         case .working: .green
         case .idle: .secondary
         case .paused: .orange

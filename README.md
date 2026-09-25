@@ -30,14 +30,15 @@ Install: copy `build/Build/Products/Release/PortBar.app` to `~/Applications`.
 - **⌥⌘P** (configurable) opens/closes the panel from anywhere. Settings also has *Mở PortBar khi đăng nhập* (launch at login; after reinstalling an ad-hoc signed build, toggle it off and on again).
 
 ## Agents tab
-Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose, Amp — with project folder, host app + tty, uptime, status (working / idle / paused) and CPU/RAM summed over the agent's whole process tree.
+Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose, Amp — with project folder, host app + tty, uptime, status (working / waiting for you / idle / paused) and CPU/RAM summed over the agent's whole process tree.
+- **Status source:** agents running in Orca use Orca's own hook-derived state (`~/Library/Application Support/Orca/agent-hooks/last-status.json`, matched by the agent's `ORCA_PANE_KEY`; only the state fields are read). *working* stays *working* while the agent waits for the model; *blocked* shows as **Chờ bạn**; a *working* entry with no hook event for 10 min and a quiet tree (interrupted turn) counts as idle. Other agents fall back to tree CPU ≥ 10%. The dot's tooltip says which source was used.
 - ⏸ **Pause** freezes the agent's child processes (tool commands, MCP servers, dev servers) with SIGSTOP. The agent itself is never stopped: SIGSTOP/SIGCONT on a terminal's foreground job makes the shell take the terminal back and the process dies on its next tty read. Children spawned while paused are paused too; everything is continued when PortBar quits, or on the next launch after a crash.
 - ✕ **Stop** sends SIGTERM to the agent and its whole tree (confirmed, lists every process; Force = SIGKILL). Claude/Codex sessions can be reopened with `claude --resume` / `codex resume`.
 - Port rows show which agent started them (e.g. `Claude Code · my-app`).
 - ↗ **Open terminal** focuses the agent's exact tab: Orca via `orca terminal switch` (tested with Orca 1.4.205), Terminal/iTerm via AppleScript matched by tty (asks for Automation permission once). Other hosts are just brought to the front.
 
 ## Notifications
-Settings → Agents: a notification when an agent finishes a task (≥ 20s by default) or waits for you; clicking it opens the agent's terminal.
+Settings → Agents: a notification when an agent finishes a task (≥ 20s by default) or waits for you; clicking it opens the agent's terminal. Agents in Orca need no setup: Orca's state changes (working → done, → blocked) drive the notifications.
 - **Precise (recommended):** add the hooks shown in Settings (Copy button) — Claude Code `UserPromptSubmit` / `Stop` / `Notification` in `~/.claude/settings.json`, Codex `notify` in `~/.codex/config.toml`. Each hook runs `open -g "portbar://agent-event?e=start|stop|input&pid=$PPID"`; PortBar never edits these files.
 - **Fallback:** agents without hooks are watched by CPU: a working stretch ≥ 20s followed by 30s of idle CPU counts as done. While such a stretch is timed, agents are re-sampled every 3s (process table only, no lsof).
 

@@ -1,12 +1,14 @@
 import Foundation
 
+/// Case order = sort order in the Agents tab: agents that need the user first.
 enum AgentStatus: Int, Comparable, Sendable {
-    case working, idle, paused
+    case waiting, working, idle, paused
 
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
 
     var title: String {
         switch self {
+        case .waiting: "Chờ bạn"
         case .working: "Đang chạy"
         case .idle: "Rảnh"
         case .paused: "Tạm dừng"
@@ -30,6 +32,8 @@ struct AgentRow: Identifiable, Sendable, Equatable {
     var teamMember: String? = nil
     var terminal: TerminalLocator? = nil
     var gitBranch: String? = nil
+    /// State reported by Orca for the agent's pane, when it runs in Orca.
+    var orcaState: OrcaAgentState? = nil
 
     var id: Int32 { pid }
 

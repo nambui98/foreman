@@ -111,7 +111,7 @@ enum ProcessInspector {
     /// Environment keys PortBar may read from other processes: enough to locate an agent's
     /// terminal tab. Everything else (tokens, secrets) is skipped while parsing and never stored.
     static let terminalEnvironmentKeys: Set<String> = [
-        "TERM_PROGRAM", "ORCA_TERMINAL_HANDLE", "ITERM_SESSION_ID", "TERM_SESSION_ID",
+        "TERM_PROGRAM", "ORCA_TERMINAL_HANDLE", "ORCA_PANE_KEY", "ITERM_SESSION_ID", "TERM_SESSION_ID",
     ]
 
     /// Values of `keys` from the process environment (same `KERN_PROCARGS2` buffer as argv).

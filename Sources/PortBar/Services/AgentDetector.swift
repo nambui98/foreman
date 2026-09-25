@@ -15,6 +15,7 @@ enum AgentDetector {
             var teamMember: String?
             var tty: String?
             var terminal: TerminalLocator?
+            var orcaPaneKey: String?
         }
         var resolved: [Key: Resolved] = [:]
     }
@@ -80,14 +81,16 @@ enum AgentDetector {
                 resolved.teamMember = teamMember(arguments: arguments(pid))
                 // devname() consults the device database — slow enough to cache.
                 resolved.tty = ProcessInspector.ttyName(device: entry.ttyDevice)
-                resolved.terminal = TerminalLocator.resolve(
-                    environment: environment(pid), host: resolved.host, tty: resolved.tty)
+                let env = environment(pid)
+                resolved.terminal = TerminalLocator.resolve(environment: env, host: resolved.host, tty: resolved.tty)
+                resolved.orcaPaneKey = env["ORCA_PANE_KEY"]
                 fresh.resolved[key] = resolved
             }
             return AgentProcess(
                 pid: pid, kind: kind, startSec: entry.startSec,
                 tty: resolved.tty, host: resolved.host,
-                teamMember: resolved.teamMember, terminal: resolved.terminal)
+                teamMember: resolved.teamMember, terminal: resolved.terminal,
+                orcaPaneKey: resolved.orcaPaneKey)
         }
         .sorted { $0.pid < $1.pid }
         cache = fresh  // drops exited processes

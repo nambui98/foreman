@@ -26,6 +26,7 @@ final class PortMonitor {
     private var agentSampler = CPUSampler()
     private var detectorCache = AgentDetector.Cache()
     private var branchCache = GitBranch.Cache()
+    private var orcaReader = OrcaStatusReader()
     let agentController = AgentController(defaults: .standard)
     private var isRefreshing = false
     private var refreshRequested = false
@@ -91,6 +92,8 @@ final class PortMonitor {
         let portDetails: [Int32: ProcessDetails]
         let cache: AgentDetector.Cache
         let branches: GitBranch.Cache
+        let orcaReader: OrcaStatusReader
+        let orcaStates: [String: OrcaAgentState]
     }
 
     private func refreshOnce(includePorts: Bool) async {
@@ -101,11 +104,13 @@ final class PortMonitor {
             let uid = currentUID
             let cache = detectorCache
             let branches = branchCache
+            let orcaReader = orcaReader
             let snapshot = await Task.detached(priority: .utility) {
-                Self.collect(portPids: pids, currentUID: uid, cache: cache, branches: branches)
+                Self.collect(portPids: pids, currentUID: uid, cache: cache, branches: branches, orcaReader: orcaReader)
             }.value
             detectorCache = snapshot.cache
             branchCache = snapshot.branches
+            self.orcaReader = snapshot.orcaReader
             updateAgents(from: snapshot)
             guard includePorts else { return }
 
@@ -148,14 +153,17 @@ final class PortMonitor {
         agentSampler.prune(keeping: agentPids)
         agents = AgentRowBuilder.rows(
             agents: snapshot.agents, usage: snapshot.usage, cpuPercent: agentCPU,
-            paused: Set(agentController.paused.keys))
+            paused: Set(agentController.paused.keys), orca: snapshot.orcaStates)
         agentStates = agentStates.filter { agentPids.contains($0.key) }
         events.observe(agents: agents)
     }
 
     private nonisolated static func collect(
-        portPids: Set<Int32>, currentUID: UInt32, cache: AgentDetector.Cache, branches: GitBranch.Cache
+        portPids: Set<Int32>, currentUID: UInt32, cache: AgentDetector.Cache, branches: GitBranch.Cache,
+        orcaReader: OrcaStatusReader
     ) -> Snapshot {
+        var orcaReader = orcaReader
+        let orcaStates = orcaReader.states()
         var branches = branches
         var folders: Set<String> = []
         let table = ProcessTable.snapshot()
@@ -187,7 +195,8 @@ final class PortMonitor {
         // Agent-only passes see no port folders; keep those entries until the next full pass.
         if !portPids.isEmpty { branches.prune(keeping: folders) }
         return Snapshot(
-            table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache, branches: branches)
+            table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache, branches: branches,
+            orcaReader: orcaReader, orcaStates: orcaStates)
     }
 
     // MARK: Agent events

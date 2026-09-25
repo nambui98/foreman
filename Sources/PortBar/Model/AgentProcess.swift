@@ -38,4 +38,6 @@ struct AgentProcess: Sendable, Equatable {
     var teamMember: String? = nil
     /// How to focus the agent's terminal tab, when it can be located.
     var terminal: TerminalLocator? = nil
+    /// Orca pane (`ORCA_PANE_KEY`), the key of Orca's per-pane agent status.
+    var orcaPaneKey: String? = nil
 }

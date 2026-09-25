@@ -30,7 +30,7 @@ struct StatusTransitionTracker {
             switch status {
             case .working:
                 stretches[id, default: Stretch(start: now, lastWorking: now)].lastWorking = now
-            case .paused:
+            case .paused, .waiting:
                 stretches[id] = nil
             case .idle:
                 guard let stretch = stretches[id], now.timeIntervalSince(stretch.lastWorking) >= idleDebounce else {
