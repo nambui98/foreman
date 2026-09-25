@@ -14,10 +14,15 @@ struct PanelView: View {
         VStack(spacing: 0) {
             HeaderView(query: $query, tab: $tab, totals: totals) { showCleanup = true }
             Divider()
-            switch tab {
-            case .ports: content
-            case .agents: agentsContent
+            // Every tab and state gets the same height: MenuBarExtra keeps the window's bottom edge
+            // when it resizes, so a height change on tab switch pushed the header under the menu bar.
+            VStack(spacing: 0) {
+                switch tab {
+                case .ports: content
+                case .agents: agentsContent
+                }
             }
+            .frame(height: Self.contentHeight)
             Divider()
             footer
         }
@@ -59,6 +64,10 @@ struct PanelView: View {
         }
     }
 
+    /// MenuBarExtra windows size to their content's ideal height and a ScrollView has none, so the
+    /// list area needs one explicit height.
+    static let contentHeight: CGFloat = 480
+
     @ViewBuilder private var agentsContent: some View {
         if let usage = monitor.usage {
             UsageSummaryView(usage: usage)
@@ -67,7 +76,7 @@ struct PanelView: View {
         if visibleAgents.isEmpty {
             ContentUnavailableView(query.isEmpty ? String(localized: "No agents running") : String(localized: "No matches"),
                                    systemImage: "sparkles")
-                .frame(height: 200)
+                .frame(maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
@@ -81,7 +90,7 @@ struct PanelView: View {
                 }
                 .padding(.vertical, 8)
             }
-            .frame(height: 480)
+            .frame(maxHeight: .infinity)
         }
     }
 
@@ -100,11 +109,11 @@ struct PanelView: View {
         if let error = monitor.lastError, monitor.rows.isEmpty {
             ContentUnavailableView("Can't read the port list", systemImage: "exclamationmark.triangle",
                                    description: Text(error))
-                .frame(height: 200)
+                .frame(maxHeight: .infinity)
         } else if visibleRows.isEmpty {
             ContentUnavailableView(query.isEmpty ? String(localized: "No open ports") : String(localized: "No matches"),
                                    systemImage: "network.slash")
-                .frame(height: 200)
+                .frame(maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
@@ -114,9 +123,7 @@ struct PanelView: View {
                 }
                 .padding(.vertical, 8)
             }
-            // MenuBarExtra windows size to the content's ideal height and a ScrollView has none
-            // (min/ideal hints are ignored), so the list needs an explicit height or it collapses.
-            .frame(height: 480)
+            .frame(maxHeight: .infinity)
         }
     }
 
