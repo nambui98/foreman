@@ -21,28 +21,42 @@ enum AgentRowBuilder {
 
     static func rows(
         agents: [AgentProcess], usage: [Int32: AgentTreeUsage], cpuPercent: [Int32: Double], paused: Set<Int32>,
-        orca: [String: OrcaAgentState] = [:], now: Date = Date()
+        orca: [String: OrcaAgentState] = [:], claude: [Int32: ClaudeSession] = [:], now: Date = Date()
     ) -> [AgentRow] {
         agents.map { agent in
             let tree = usage[agent.pid]
             let cpu = cpuPercent[agent.pid]
             let orcaState = agent.orcaPaneKey.flatMap { orca[$0] }
-            return AgentRow(
+            let session = agent.kind == .claude ? claude[agent.pid] : nil
+            var row = AgentRow(
                 pid: agent.pid, kind: agent.kind, cwd: tree?.cwd, host: agent.host, tty: agent.tty,
                 startSec: agent.startSec,
-                status: status(paused: paused.contains(agent.pid), orca: orcaState, cpuPercent: cpu, now: now),
+                status: status(paused: paused.contains(agent.pid), orca: orcaState, claude: session?.status,
+                               cpuPercent: cpu, now: now),
                 cpuPercent: cpu, memoryBytes: tree?.memoryBytes,
                 childCount: tree?.childCount ?? 0, teamMember: agent.teamMember,
                 terminal: agent.terminal, gitBranch: tree?.gitBranch, orcaState: orcaState)
+            row.statusSource = orcaState != nil ? .orca : session?.status != nil ? .claude : .cpu
+            row.claudeSessionId = session?.sessionId
+            return row
         }
         .sorted { ($0.status, UInt64.max - ($0.memoryBytes ?? 0), $0.pid) < ($1.status, UInt64.max - ($1.memoryBytes ?? 0), $1.pid) }
     }
 
-    /// Orca's hook-derived state when available, else tree CPU (which misses model waits).
-    static func status(paused: Bool, orca: OrcaAgentState?, cpuPercent: Double?, now: Date) -> AgentStatus {
+    /// Orca's hook-derived state first, then Claude Code's own session status, else tree CPU
+    /// (which misses model waits).
+    static func status(
+        paused: Bool, orca: OrcaAgentState?, claude: ClaudeSession.Status? = nil, cpuPercent: Double?, now: Date
+    ) -> AgentStatus {
         if paused { return .paused }
         let busyCPU = (cpuPercent ?? 0) >= workingThreshold
-        guard let orca else { return busyCPU ? .working : .idle }
+        guard let orca else {
+            switch claude {
+            case .busy, .shell: return .working
+            case .idle: return .idle
+            case nil: return busyCPU ? .working : .idle
+            }
+        }
         switch orca.phase {
         case .blocked:
             return .waiting

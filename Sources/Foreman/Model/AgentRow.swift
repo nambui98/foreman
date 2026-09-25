@@ -16,6 +16,15 @@ enum AgentStatus: Int, Comparable, Sendable {
     }
 }
 
+enum AgentStatusSource: Sendable {
+    /// Orca's hook-derived state for the agent's pane.
+    case orca
+    /// Claude Code's own session file.
+    case claude
+    /// Estimated from process-tree CPU.
+    case cpu
+}
+
 /// One agent in the Agents tab, with totals over its whole process tree.
 struct AgentRow: Identifiable, Sendable, Equatable {
     let pid: Int32
@@ -34,6 +43,12 @@ struct AgentRow: Identifiable, Sendable, Equatable {
     var gitBranch: String? = nil
     /// State reported by Orca for the agent's pane, when it runs in Orca.
     var orcaState: OrcaAgentState? = nil
+    /// Where `status` came from, for the status dot's tooltip.
+    var statusSource: AgentStatusSource = .cpu
+    /// Claude Code session id (links the agent to its transcript).
+    var claudeSessionId: String? = nil
+    /// Short task title of the agent's terminal tab (Orca), e.g. `Fix login redirect`.
+    var taskTitle: String? = nil
 
     var id: Int32 { pid }
 

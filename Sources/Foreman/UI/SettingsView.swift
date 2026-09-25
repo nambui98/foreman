@@ -132,6 +132,8 @@ private struct AgentSettings: View {
         @Bindable var settings = settings
         SettingsPane {
             Section {
+                Toggle("Keep the Mac awake while an agent works", isOn: $settings.keepAwake)
+                    .help("Prevents idle sleep only while an agent is working; the display can still turn off.")
                 Toggle("Notify when an agent finishes or waits for you", isOn: $settings.notifyEnabled)
                     .onChange(of: settings.notifyEnabled) { _, enabled in
                         if enabled { Notifier.requestAuthorization() }

@@ -12,9 +12,7 @@ struct AgentRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Circle().fill(statusColor).frame(width: 8, height: 8).padding(.top, 6)
-                .help(agent.status == .paused ? agent.status.title
-                      : agent.status.title + " · "
-                        + (agent.orcaState != nil ? String(localized: "from Orca") : String(localized: "estimated from CPU")))
+                .help(agent.status == .paused ? agent.status.title : agent.status.title + " · " + sourceTitle)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(agent.kind.displayName).font(.system(.body, weight: .medium)).lineLimit(1)
@@ -27,6 +25,9 @@ struct AgentRowView: View {
                             .padding(.horizontal, 5).padding(.vertical, 1)
                             .background(statusColor.opacity(0.2), in: .capsule).foregroundStyle(statusColor)
                     }
+                }
+                if let title = agent.taskTitle {
+                    Text(verbatim: title).font(.callout).lineLimit(1).truncationMode(.tail)
                 }
                 if let cwd = Formatters.abbreviatePath(agent.cwd) {
                     HStack(spacing: 4) {
@@ -76,6 +77,14 @@ struct AgentRowView: View {
     }
 
     private var state: KillState? { monitor.agentStates[agent.pid] }
+
+    private var sourceTitle: String {
+        switch agent.statusSource {
+        case .orca: String(localized: "from Orca")
+        case .claude: String(localized: "from Claude Code")
+        case .cpu: String(localized: "estimated from CPU")
+        }
+    }
 
     private var statusColor: Color {
         switch agent.status {

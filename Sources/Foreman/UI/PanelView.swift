@@ -154,6 +154,10 @@ struct PanelView: View {
                 Text("Updated \(updated.formatted(date: .omitted, time: .standard))")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            if monitor.isKeepingAwake {
+                Image(systemName: "cup.and.saucer.fill").font(.caption).foregroundStyle(.secondary)
+                    .help("Keeping the Mac awake while an agent works")
+            }
             Spacer()
             Button {
                 // A menu bar (LSUIElement) app must activate itself or Settings opens behind other apps.

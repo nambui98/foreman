@@ -33,6 +33,11 @@ final class PortMonitor {
     private var detectorCache = AgentDetector.Cache()
     private var branchCache = GitBranch.Cache()
     private var orcaReader = OrcaStatusReader()
+    private var claudeReader = ClaudeSessionReader()
+    /// Orca terminal handle → task title; fetched only while the panel is open.
+    private var taskTitles: [String: String] = [:]
+    private var lastTitleFetch: ContinuousClock.Instant?
+    static let titleInterval: Duration = .seconds(10)
     let agentController = AgentController(defaults: .standard)
     private var isRefreshing = false
     private var refreshRequested = false
@@ -42,6 +47,9 @@ final class PortMonitor {
     private let home = NSHomeDirectory()
     private var lastFullRefresh: ContinuousClock.Instant?
     let events: AgentEventCenter
+    let keepAwake = KeepAwake()
+    /// Mirrors `keepAwake.isActive` for the UI.
+    private(set) var isKeepingAwake = false
     private let settings: AppSettings
     private var flagger = RowFlagger()
 
@@ -100,6 +108,8 @@ final class PortMonitor {
         let branches: GitBranch.Cache
         let orcaReader: OrcaStatusReader
         let orcaStates: [String: OrcaAgentState]
+        let claudeReader: ClaudeSessionReader
+        let claudeSessions: [Int32: ClaudeSession]
     }
 
     private func refreshOnce(includePorts: Bool) async {
@@ -111,12 +121,17 @@ final class PortMonitor {
             let cache = detectorCache
             let branches = branchCache
             let orcaReader = orcaReader
+            let claudeReader = claudeReader
             let snapshot = await Task.detached(priority: .utility) {
-                Self.collect(portPids: pids, currentUID: uid, cache: cache, branches: branches, orcaReader: orcaReader)
+                Self.collect(
+                    portPids: pids, currentUID: uid, cache: cache, branches: branches, orcaReader: orcaReader,
+                    claudeReader: claudeReader)
             }.value
             detectorCache = snapshot.cache
             branchCache = snapshot.branches
             self.orcaReader = snapshot.orcaReader
+            self.claudeReader = snapshot.claudeReader
+            if includePorts { await refreshTaskTitlesIfDue() }
             updateAgents(from: snapshot)
             guard includePorts else { return }
 
@@ -162,17 +177,26 @@ final class PortMonitor {
         agentSampler.prune(keeping: agentPids)
         agents = AgentRowBuilder.rows(
             agents: snapshot.agents, usage: snapshot.usage, cpuPercent: agentCPU,
-            paused: Set(agentController.paused.keys), orca: snapshot.orcaStates)
+            paused: Set(agentController.paused.keys), orca: snapshot.orcaStates, claude: snapshot.claudeSessions)
+        .map { row in
+            var row = row
+            if case .orca(let handle) = row.terminal { row.taskTitle = taskTitles[handle] }
+            return row
+        }
         agentStates = agentStates.filter { agentPids.contains($0.key) }
         events.observe(agents: agents)
+        keepAwake.update(active: settings.keepAwake && agents.contains { $0.status == .working })
+        isKeepingAwake = keepAwake.isActive
     }
 
     private nonisolated static func collect(
         portPids: Set<Int32>, currentUID: UInt32, cache: AgentDetector.Cache, branches: GitBranch.Cache,
-        orcaReader: OrcaStatusReader
+        orcaReader: OrcaStatusReader, claudeReader: ClaudeSessionReader
     ) -> Snapshot {
         var orcaReader = orcaReader
         let orcaStates = orcaReader.states()
+        var claudeReader = claudeReader
+        let claudeSessions = claudeReader.sessions()
         var branches = branches
         var folders: Set<String> = []
         let table = ProcessTable.snapshot()
@@ -206,7 +230,7 @@ final class PortMonitor {
         if !portPids.isEmpty { branches.prune(keeping: folders) }
         return Snapshot(
             table: table, agents: agents, usage: usage, portDetails: portDetails, cache: cache, branches: branches,
-            orcaReader: orcaReader, orcaStates: orcaStates)
+            orcaReader: orcaReader, orcaStates: orcaStates, claudeReader: claudeReader, claudeSessions: claudeSessions)
     }
 
     // MARK: Agent events
@@ -312,6 +336,24 @@ final class PortMonitor {
 
         killStates[row.pid] = Self.state(after: outcome)
         await refresh()
+    }
+
+    // MARK: Task titles
+
+    /// `orca terminal list` costs ~0.15s CPU, so titles are only refreshed while someone looks.
+    private func refreshTaskTitlesIfDue() async {
+        guard isPanelVisible, agents.contains(where: { if case .orca = $0.terminal { true } else { false } }) else {
+            return
+        }
+        if let last = lastTitleFetch, ContinuousClock.now - last < Self.titleInterval { return }
+        lastTitleFetch = .now
+        guard let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: TerminalJumper.orcaBundleID) else {
+            return
+        }
+        let cli = app.appending(path: "Contents/Resources/bin/orca")
+        if let titles = await Task.detached(priority: .utility, operation: { OrcaTerminalTitles.list(orcaCLI: cli) }).value {
+            taskTitles = titles
+        }
     }
 
     // MARK: Containers

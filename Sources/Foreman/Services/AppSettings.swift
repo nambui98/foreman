@@ -52,6 +52,7 @@ final class AppSettings {
         static let cpuIdleDebounceSec = "cpuIdleDebounceSec"
         static let hotKeyEnabled = "hotKeyEnabled"
         static let hotKey = "hotKey"
+        static let keepAwake = "keepAwake"
     }
 
     var language: AppLanguage {
@@ -76,6 +77,8 @@ final class AppSettings {
     /// Agents without hooks: how long CPU must stay idle before "done" is assumed.
     var cpuIdleDebounceSec: Double { didSet { defaults.set(cpuIdleDebounceSec, forKey: Key.cpuIdleDebounceSec) } }
 
+    /// Prevent idle sleep while an agent is working.
+    var keepAwake: Bool { didSet { defaults.set(keepAwake, forKey: Key.keepAwake) } }
     var hotKeyEnabled: Bool { didSet { defaults.set(hotKeyEnabled, forKey: Key.hotKeyEnabled) } }
     /// Global shortcut that opens/closes the panel.
     var hotKey: HotKeyCombo {
@@ -99,6 +102,7 @@ final class AppSettings {
         notifyEnabled = defaults.object(forKey: Key.notifyEnabled) as? Bool ?? true
         notifyMinWorkSec = defaults.object(forKey: Key.notifyMinWorkSec) as? Double ?? 20
         cpuIdleDebounceSec = defaults.object(forKey: Key.cpuIdleDebounceSec) as? Double ?? 30
+        keepAwake = defaults.object(forKey: Key.keepAwake) as? Bool ?? true
         hotKeyEnabled = defaults.object(forKey: Key.hotKeyEnabled) as? Bool ?? true
         hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(HotKeyCombo.self, from: $0) }
             ?? .standard

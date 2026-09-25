@@ -55,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        monitor.keepAwake.update(active: false)
         monitor.agentController.resumeAll()
     }
 }
