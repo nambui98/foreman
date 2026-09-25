@@ -44,8 +44,8 @@ struct ProcessKiller: Sendable {
 
     /// Safety guards: never signal ourselves, launchd/kernel, or a group that contains us.
     private func refusal(pid: Int32, wholeGroup: Bool) -> String? {
-        if pid <= 1 { return "Không thể dừng tiến trình hệ thống (PID \(pid))" }
-        if pid == getpid() { return "Không thể tự dừng Foreman từ danh sách" }
+        if pid <= 1 { return String(localized: "Can't stop a system process (PID \(Int(pid)))") }
+        if pid == getpid() { return String(localized: "Foreman can't stop itself from the list") }
         if wholeGroup, case .failure(let reason) = Self.groupMembers(of: pid) { return reason.message }
         return nil
     }
@@ -60,10 +60,10 @@ struct ProcessKiller: Sendable {
     /// terminal is refused.
     static func groupMembers(of pid: Int32) -> Result<[String], GroupRefusal> {
         guard let pgid = ProcessInspector.bsdInfo(pid: pid).map({ Int32($0.pbi_pgid) }) else {
-            return .failure(GroupRefusal(message: "Không đọc được process group"))
+            return .failure(GroupRefusal(message: String(localized: "Can't read the process group")))
         }
         if pgid <= 1 || pgid == getpgrp() {
-            return .failure(GroupRefusal(message: "Process group \(pgid) không an toàn để dừng"))
+            return .failure(GroupRefusal(message: String(localized: "Process group \(Int(pgid)) is not safe to stop")))
         }
         var members: [String] = []
         for member in ProcessInspector.groupMembers(pgid: pgid) {
@@ -72,7 +72,7 @@ struct ProcessKiller: Sendable {
             let flags = Int32(bitPattern: info.pbi_flags)
             if flags & PROC_FLAG_SLEADER != 0 && flags & PROC_FLAG_CONTROLT != 0 {
                 return .failure(GroupRefusal(
-                    message: "Nhóm chứa shell của terminal (\(name), PID \(member)) — chỉ dừng được từng tiến trình"))
+                    message: String(localized: "The group contains a terminal shell (\(name), PID \(Int(member))) — stop processes one by one")))
             }
             members.append("\(name) (\(member))")
         }

@@ -140,7 +140,7 @@ struct OrcaNotificationTests {
         center.observe(agents: [agent(.working, since: t0)], now: t0)
         #expect(center.needsFastPolling)
         center.observe(agents: [agent(.done, since: t0 + 95)], now: t0 + 97)
-        #expect(box.notices.map(\.body) == ["Xong việc sau 1m"])
+        #expect(box.notices.map(\.body) == ["Done after 1m"])
     }
 
     @Test func shortTurnIsSilent() throws {
@@ -155,7 +155,7 @@ struct OrcaNotificationTests {
         center.observe(agents: [agent(.working, since: t0)], now: t0)
         center.observe(agents: [agent(.blocked, since: t0 + 40)], now: t0 + 41)
         center.observe(agents: [agent(.blocked, since: t0 + 40)], now: t0 + 60)
-        #expect(box.notices.map(\.body) == ["Đang chờ bạn trả lời"])
+        #expect(box.notices.map(\.body) == ["Waiting for your answer"])
     }
 
     @Test func blockedStraightToDoneStillNotifies() throws {

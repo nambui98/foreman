@@ -117,7 +117,7 @@ struct AgentEventCenterTests {
         center.handleHook(.start, agent: agent(), now: t0)
         center.handleHook(.stop, agent: agent(), now: t0 + 125)
         #expect(box.notices.count == 1)
-        #expect(box.notices.first?.body == "Xong việc sau 2m")
+        #expect(box.notices.first?.body == "Done after 2m")
         #expect(box.notices.first?.title == "Claude Code · proj")
     }
 
@@ -131,7 +131,7 @@ struct AgentEventCenterTests {
     @Test func stopWithoutStartNotifies() throws {
         let (center, _, box) = try makeCenter()
         center.handleHook(.stop, agent: agent(), now: t0)
-        #expect(box.notices.map(\.body) == ["Xong việc"])
+        #expect(box.notices.map(\.body) == ["Done"])
     }
 
     @Test func inputAlwaysNotifiesButIsDeduplicated() throws {
@@ -166,14 +166,14 @@ struct AgentEventCenterTests {
         #expect(center.needsFastPolling)
         center.observe(agents: [agent(status: .working)], now: t0 + 30)
         center.observe(agents: [agent(status: .idle)], now: t0 + 70)
-        #expect(box.notices.map(\.body) == ["Có vẻ đã xong việc (CPU đã rảnh)"])
+        #expect(box.notices.map(\.body) == ["Looks done (CPU went idle)"])
     }
 
     @Test func unmatchedHookIsRecordedOnly() throws {
         let (center, _, box) = try makeCenter()
         center.handleHook(.stop, agent: nil, now: t0)
         #expect(box.notices.isEmpty)
-        #expect(center.lastHookEvent?.contains("không khớp") == true)
+        #expect(center.lastHookEvent?.contains("matches no agent") == true)
     }
 }
 

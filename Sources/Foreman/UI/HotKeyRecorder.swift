@@ -8,7 +8,7 @@ struct HotKeyRecorder: View {
     @State private var monitor: Any?
 
     var body: some View {
-        Button(isRecording ? "Nhấn tổ hợp phím…" : combo.display) {
+        Button(isRecording ? String(localized: "Press a shortcut…") : combo.display) {
             isRecording ? stop() : start()
         }
         .monospaced()

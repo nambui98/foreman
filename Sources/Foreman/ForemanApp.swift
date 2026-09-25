@@ -45,6 +45,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Starts a fresh copy of the app once this one has quit (used to apply a language change).
+    static func relaunch() {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "sleep 1; /usr/bin/open \"$0\"", Bundle.main.bundlePath]
+        try? process.run()
+        NSApp.terminate(nil)
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         monitor.agentController.resumeAll()
     }
@@ -54,6 +63,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct ForemanApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     private var monitor: PortMonitor { delegate.monitor }
+
+    init() {
+        // Tests pin their language with -AppleLanguages (en) in the scheme instead.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            AppLanguage.applyStored()
+        }
+    }
 
     var body: some Scene {
         MenuBarExtra {

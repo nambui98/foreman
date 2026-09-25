@@ -47,8 +47,8 @@ struct TerminalLocatorTests {
         #expect(TerminalJumper.orcaSwitchError(json: Data(#"{"ok": true}"#.utf8), exitStatus: 0) == nil)
         #expect(TerminalJumper.orcaSwitchError(
             json: Data(#"{"ok": false, "error": {"code": "terminal_handle_stale"}}"#.utf8), exitStatus: 1)
-            == "Orca không chuyển được tab (terminal_handle_stale)")
-        #expect(TerminalJumper.orcaSwitchError(json: Data(), exitStatus: 15) == "Orca không chuyển được tab")
+            == "Orca couldn't switch tabs (terminal_handle_stale)")
+        #expect(TerminalJumper.orcaSwitchError(json: Data(), exitStatus: 15) == "Orca couldn't switch tabs")
     }
 }
 

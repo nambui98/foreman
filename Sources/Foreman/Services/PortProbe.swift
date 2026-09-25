@@ -6,9 +6,9 @@ struct ProbeResult: Equatable, Sendable {
     var title: String?
     var error: String?
 
-    /// `200 · Vite App`, `302`, `lỗi: timeout`.
+    /// `200 · Vite App`, `302`, `error: timeout`.
     var summary: String {
-        if let error { return "lỗi: \(error)" }
+        if let error { return String(localized: "error: \(error)") }
         return [status.map(String.init), title].compactMap { $0 }.joined(separator: " · ")
     }
 }
@@ -61,9 +61,9 @@ actor PortProbe {
             let status = (response as? HTTPURLResponse)?.statusCode
             return ProbeResult(status: status, title: title(in: String(decoding: body, as: UTF8.self)))
         } catch let error as URLError {
-            return ProbeResult(error: error.code == .timedOut ? "timeout" : "không phải HTTP")
+            return ProbeResult(error: error.code == .timedOut ? String(localized: "timeout") : String(localized: "not HTTP"))
         } catch {
-            return ProbeResult(error: "không phải HTTP")
+            return ProbeResult(error: String(localized: "not HTTP"))
         }
     }
 

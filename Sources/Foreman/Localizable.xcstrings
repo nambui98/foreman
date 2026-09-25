@@ -1,0 +1,1251 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "shouldTranslate": false
+    },
+    " and %lld more": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " và %lld tiến trình khác"
+          }
+        }
+      }
+    },
+    "%@ (%@) · %@": {
+      "shouldTranslate": false
+    },
+    "%lld": {
+      "shouldTranslate": false
+    },
+    "%lld agents · CPU %@ · RAM %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld agent · CPU %@ · RAM %@"
+          }
+        }
+      }
+    },
+    "%lld child processes": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tiến trình con"
+          }
+        }
+      }
+    },
+    "%lld h": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld giờ"
+          }
+        }
+      }
+    },
+    "%lld open connections to this process": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kết nối đang mở tới tiến trình này"
+          }
+        }
+      }
+    },
+    "%lld processes · CPU %@ · RAM %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tiến trình · CPU %@ · RAM %@"
+          }
+        }
+      }
+    },
+    "%llds of idle CPU": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llds CPU rảnh"
+          }
+        }
+      }
+    },
+    "+%lld": {
+      "shouldTranslate": false
+    },
+    "Agent's tab not found": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thấy tab của agent"
+          }
+        }
+      }
+    },
+    "Agents": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agents"
+          }
+        }
+      }
+    },
+    "Another app uses this shortcut — record a different one.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổ hợp này đang bị app khác dùng — chọn tổ hợp khác."
+          }
+        }
+      }
+    },
+    "Another user's process — not permitted": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiến trình của user khác — không đủ quyền"
+          }
+        }
+      }
+    },
+    "App %@ not found": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy app %@"
+          }
+        }
+      }
+    },
+    "AppleScript failed (Automation permission needed?)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AppleScript lỗi (cần quyền Automation?)"
+          }
+        }
+      }
+    },
+    "Both": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cả hai"
+          }
+        }
+      }
+    },
+    "Can't read the port list": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được danh sách cổng"
+          }
+        }
+      }
+    },
+    "Can't read the process group": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đọc được process group"
+          }
+        }
+      }
+    },
+    "Can't stop a system process (PID %lld)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể dừng tiến trình hệ thống (PID %lld)"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huỷ"
+          }
+        }
+      }
+    },
+    "Clean up (%lld)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dọn (%lld)"
+          }
+        }
+      }
+    },
+    "Clean up leftover processes": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dọn tiến trình bị bỏ lại"
+          }
+        }
+      }
+    },
+    "Codex reports only the end of a turn (no start), so every Codex turn notifies.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex chỉ gửi sự kiện kết thúc (không có lúc bắt đầu) nên luôn được báo."
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã copy"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "Copy PID": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy PID"
+          }
+        }
+      }
+    },
+    "Copy and merge into the agent's config file. Foreman never edits these files.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy rồi gộp vào file cấu hình của agent. Foreman không tự sửa các file này."
+          }
+        }
+      }
+    },
+    "Couldn't run the orca CLI": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không chạy được orca CLI"
+          }
+        }
+      }
+    },
+    "Dev RAM": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM của dev"
+          }
+        }
+      }
+    },
+    "Dev process count": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số tiến trình dev"
+          }
+        }
+      }
+    },
+    "Dev servers with no connections and no CPU for this long are tagged “idle”.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dev server không có kết nối và không dùng CPU quá lâu được gắn nhãn “rảnh”."
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xong việc"
+          }
+        }
+      }
+    },
+    "Done after %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xong việc sau %@"
+          }
+        }
+      }
+    },
+    "Force": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Force"
+          }
+        }
+      }
+    },
+    "Force Kill (SIGKILL)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buộc dừng (SIGKILL)"
+          }
+        }
+      }
+    },
+    "Foreman": {
+      "shouldTranslate": false
+    },
+    "Foreman can't stop itself from the list": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể tự dừng Foreman từ danh sách"
+          }
+        }
+      }
+    },
+    "Foreman, %lld dev ports, %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foreman, %lld cổng dev, %@"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chung"
+          }
+        }
+      }
+    },
+    "Hide": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ẩn"
+          }
+        }
+      }
+    },
+    "Hooks (exact, instant)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hook (báo chính xác, tức thì)"
+          }
+        }
+      }
+    },
+    "Idle": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rảnh"
+          }
+        }
+      }
+    },
+    "Idle after": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coi là rảnh sau"
+          }
+        }
+      }
+    },
+    "Invalid terminal handle": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal handle không hợp lệ"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngôn ngữ"
+          }
+        }
+      }
+    },
+    "Last event": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sự kiện gần nhất"
+          }
+        }
+      }
+    },
+    "Looks done (CPU went idle)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có vẻ đã xong việc (CPU đã rảnh)"
+          }
+        }
+      }
+    },
+    "Menu bar": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu bar"
+          }
+        }
+      }
+    },
+    "Needs approval in System Settings → Login Items.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cần cho phép trong Cài đặt hệ thống → Mục đăng nhập."
+          }
+        }
+      }
+    },
+    "No agents running": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có agent nào đang chạy"
+          }
+        }
+      }
+    },
+    "No child processes to pause": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có tiến trình con để tạm dừng"
+          }
+        }
+      }
+    },
+    "No matches": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy"
+          }
+        }
+      }
+    },
+    "No open ports": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có cổng nào đang mở"
+          }
+        }
+      }
+    },
+    "Not permitted": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đủ quyền"
+          }
+        }
+      }
+    },
+    "Not permitted to stop this process": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không đủ quyền để dừng tiến trình này"
+          }
+        }
+      }
+    },
+    "Notify when an agent finishes or waits for you": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thông báo khi agent xong / chờ bạn"
+          }
+        }
+      }
+    },
+    "Only for tasks of at least": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ báo task dài ≥"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở"
+          }
+        }
+      }
+    },
+    "Open %@ (tab unknown)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở %@ (không xác định được tab)"
+          }
+        }
+      }
+    },
+    "Open Foreman at login": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở Foreman khi đăng nhập"
+          }
+        }
+      }
+    },
+    "Open folders with": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở thư mục bằng"
+          }
+        }
+      }
+    },
+    "Open http://localhost:%@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở http://localhost:%@"
+          }
+        }
+      }
+    },
+    "Open in %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở trong %@"
+          }
+        }
+      }
+    },
+    "Open in browser": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở trong trình duyệt"
+          }
+        }
+      }
+    },
+    "Open localhost:%@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở localhost:%@"
+          }
+        }
+      }
+    },
+    "Open terminal (%@)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở terminal (%@)"
+          }
+        }
+      }
+    },
+    "Open the agent's terminal tab in %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở tab terminal của agent trong %@"
+          }
+        }
+      }
+    },
+    "Orange icon when dev RAM ≥": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon cam khi RAM dev ≥"
+          }
+        }
+      }
+    },
+    "Orca couldn't switch tabs": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orca không chuyển được tab"
+          }
+        }
+      }
+    },
+    "Orca not found": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy Orca"
+          }
+        }
+      }
+    },
+    "Pause the child processes (commands, MCP, dev servers). The agent keeps running; a command it waits on may time out.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạm dừng các tiến trình con (lệnh, MCP, dev server). Agent vẫn chạy; lệnh đang chờ có thể timeout."
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạm dừng"
+          }
+        }
+      }
+    },
+    "Ports": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cổng"
+          }
+        }
+      }
+    },
+    "Press a shortcut…": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhấn tổ hợp phím…"
+          }
+        }
+      }
+    },
+    "Process group %lld is not safe to stop": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Process group %lld không an toàn để dừng"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thoát"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Làm mới"
+          }
+        }
+      }
+    },
+    "Reopen the session later with: %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở lại phiên sau bằng: %@"
+          }
+        }
+      }
+    },
+    "Restart": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khởi động lại"
+          }
+        }
+      }
+    },
+    "Restart Foreman to apply the new language.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khởi động lại Foreman để dùng ngôn ngữ mới."
+          }
+        }
+      }
+    },
+    "Resume the child processes": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy tiếp các tiến trình con"
+          }
+        }
+      }
+    },
+    "Search agents, projects, terminals…": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm agent, project, terminal…"
+          }
+        }
+      }
+    },
+    "Search ports, names, folders…": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm cổng, tên, thư mục…"
+          }
+        }
+      }
+    },
+    "Send %@ to %@?": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gửi %@ tới %@?"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cài đặt"
+          }
+        }
+      }
+    },
+    "Shortcut": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổ hợp phím"
+          }
+        }
+      }
+    },
+    "Shortcut to open the panel": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phím tắt mở panel"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở thư mục trong Finder"
+          }
+        }
+      }
+    },
+    "Still running after SIGTERM — send SIGKILL": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vẫn còn chạy sau SIGTERM — gửi SIGKILL"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng"
+          }
+        }
+      }
+    },
+    "Stop %@?": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng %@?"
+          }
+        }
+      }
+    },
+    "Stop %lld": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng %lld"
+          }
+        }
+      }
+    },
+    "Stop (SIGTERM)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng (SIGTERM)"
+          }
+        }
+      }
+    },
+    "Stop (SIGTERM) · ⌥-click: SIGKILL": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng (SIGTERM) · ⌥-click: SIGKILL"
+          }
+        }
+      }
+    },
+    "Stop orphaned or long-idle dev servers": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng các dev server mồ côi / rảnh lâu"
+          }
+        }
+      }
+    },
+    "Stop the agent and all its child processes": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng agent và toàn bộ tiến trình con"
+          }
+        }
+      }
+    },
+    "Stop the whole process group": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng cả process group"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hệ thống"
+          }
+        }
+      }
+    },
+    "Terminal not found": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không xác định được terminal"
+          }
+        }
+      }
+    },
+    "The group contains a terminal shell (%@, PID %lld) — stop processes one by one": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhóm chứa shell của terminal (%@, PID %lld) — chỉ dừng được từng tiến trình"
+          }
+        }
+      }
+    },
+    "This is a system or user app, not a dev server.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đây là ứng dụng hệ thống hoặc ứng dụng người dùng, không phải dev server."
+          }
+        }
+      }
+    },
+    "Updated %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cập nhật %@"
+          }
+        }
+      }
+    },
+    "View": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xem"
+          }
+        }
+      }
+    },
+    "Waiting for you": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chờ bạn"
+          }
+        }
+      }
+    },
+    "Waiting for your answer": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang chờ bạn trả lời"
+          }
+        }
+      }
+    },
+    "Will send SIGTERM to %lld processes: %@%@.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sẽ gửi SIGTERM tới %lld tiến trình: %@%@."
+          }
+        }
+      }
+    },
+    "Will stop %lld processes: %@%@.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sẽ dừng %lld tiến trình: %@%@."
+          }
+        }
+      }
+    },
+    "Without hooks: done after": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có hook: xong sau"
+          }
+        }
+      }
+    },
+    "Working": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang chạy"
+          }
+        }
+      }
+    },
+    "error: %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lỗi: %@"
+          }
+        }
+      }
+    },
+    "estimated from CPU": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ước lượng theo CPU"
+          }
+        }
+      }
+    },
+    "folder was deleted": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "thư mục đã bị xoá"
+          }
+        }
+      }
+    },
+    "from Orca": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "theo Orca"
+          }
+        }
+      }
+    },
+    "idle": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rảnh"
+          }
+        }
+      }
+    },
+    "lsof did not respond within 3 seconds": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lsof không phản hồi sau 3 giây"
+          }
+        }
+      }
+    },
+    "lsof failed (code %lld)": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lsof lỗi (mã %lld)"
+          }
+        }
+      }
+    },
+    "matches no agent": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "không khớp agent nào"
+          }
+        }
+      }
+    },
+    "no connections, no CPU": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "không có kết nối, không dùng CPU"
+          }
+        }
+      }
+    },
+    "none yet": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chưa nhận"
+          }
+        }
+      }
+    },
+    "not HTTP": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "không phải HTTP"
+          }
+        }
+      }
+    },
+    "off": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tắt"
+          }
+        }
+      }
+    },
+    "orphan": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mồ côi"
+          }
+        }
+      }
+    },
+    "parent process exited": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tiến trình cha đã thoát"
+          }
+        }
+      }
+    },
+    "the process group of %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "process group của %@"
+          }
+        }
+      }
+    },
+    "timeout": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "timeout"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -42,11 +42,11 @@ struct PanelView: View {
         case .ports:
             let cpu = visibleRows.compactMap(\.cpuPercent).reduce(0, +)
             let memory = visibleRows.compactMap(\.memoryBytes).reduce(0, +)
-            return "\(visibleRows.count) tiến trình · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))"
+            return String(localized: "\(visibleRows.count) processes · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))")
         case .agents:
             let cpu = visibleAgents.compactMap(\.cpuPercent).reduce(0, +)
             let memory = visibleAgents.compactMap(\.memoryBytes).reduce(0, +)
-            return "\(visibleAgents.count) agent · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))"
+            return String(localized: "\(visibleAgents.count) agents · CPU \(Formatters.cpu(cpu)) · RAM \(Formatters.memory(memory))")
         }
     }
 
@@ -61,7 +61,7 @@ struct PanelView: View {
 
     @ViewBuilder private var agentsContent: some View {
         if visibleAgents.isEmpty {
-            ContentUnavailableView(query.isEmpty ? "Không có agent nào đang chạy" : "Không tìm thấy",
+            ContentUnavailableView(query.isEmpty ? String(localized: "No agents running") : String(localized: "No matches"),
                                    systemImage: "sparkles")
                 .frame(height: 200)
         } else {
@@ -94,11 +94,11 @@ struct PanelView: View {
 
     @ViewBuilder private var content: some View {
         if let error = monitor.lastError, monitor.rows.isEmpty {
-            ContentUnavailableView("Không đọc được danh sách cổng", systemImage: "exclamationmark.triangle",
+            ContentUnavailableView("Can't read the port list", systemImage: "exclamationmark.triangle",
                                    description: Text(error))
                 .frame(height: 200)
         } else if visibleRows.isEmpty {
-            ContentUnavailableView(query.isEmpty ? "Không có cổng nào đang mở" : "Không tìm thấy",
+            ContentUnavailableView(query.isEmpty ? String(localized: "No open ports") : String(localized: "No matches"),
                                    systemImage: "network.slash")
                 .frame(height: 200)
         } else {
@@ -151,7 +151,7 @@ struct PanelView: View {
     private var footer: some View {
         HStack {
             if let updated = monitor.lastUpdated {
-                Text("Cập nhật \(updated.formatted(date: .omitted, time: .standard))")
+                Text("Updated \(updated.formatted(date: .omitted, time: .standard))")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -163,9 +163,9 @@ struct PanelView: View {
                 Image(systemName: "gearshape")
             }
             .buttonStyle(.borderless)
-            .help("Cài đặt")
+            .help("Settings")
             .keyboardShortcut(",")
-            Button("Thoát") { NSApplication.shared.terminate(nil) }
+            Button("Quit") { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut("q")
         }
         .padding(.horizontal, 12).padding(.vertical, 8)

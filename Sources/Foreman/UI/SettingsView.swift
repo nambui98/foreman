@@ -6,8 +6,8 @@ import SwiftUI
 struct SettingsView: View {
     var body: some View {
         TabView {
-            Tab("Chung", systemImage: "gearshape") { GeneralSettings() }
-            Tab("Cổng", systemImage: "network") { PortSettings() }
+            Tab("General", systemImage: "gearshape") { GeneralSettings() }
+            Tab("Ports", systemImage: "network") { PortSettings() }
             Tab("Agents", systemImage: "sparkles") { AgentSettings() }
         }
         .frame(width: 460)
@@ -35,35 +35,48 @@ private struct GeneralSettings: View {
         @Bindable var settings = settings
         SettingsPane {
             Section {
-                Toggle("Mở Foreman khi đăng nhập", isOn: Binding(
+                Picker("Language", selection: $settings.language) {
+                    ForEach(AppLanguage.allCases, id: \.self) { Text(verbatim: $0.name).tag($0) }
+                }
+                if settings.language != settings.launchLanguage {
+                    HStack {
+                        Text("Restart Foreman to apply the new language.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Restart") { AppDelegate.relaunch() }
+                    }
+                }
+            }
+            Section {
+                Toggle("Open Foreman at login", isOn: Binding(
                     get: { loginStatus == .enabled || loginStatus == .requiresApproval },
                     set: { setLaunchAtLogin($0) }))
                 if loginStatus == .requiresApproval {
                     HStack {
-                        Text("Cần cho phép trong Cài đặt hệ thống → Mục đăng nhập.")
+                        Text("Needs approval in System Settings → Login Items.")
                             .font(.caption).foregroundStyle(.secondary)
-                        Button("Mở") { LoginItem.openSystemSettings() }
+                        Button("Open") { LoginItem.openSystemSettings() }
                     }
                 }
                 if let loginError {
                     Text(loginError).font(.caption).foregroundStyle(.red)
                 }
-                Toggle("Phím tắt mở panel", isOn: $settings.hotKeyEnabled)
+                Toggle("Shortcut to open the panel", isOn: $settings.hotKeyEnabled)
                 if settings.hotKeyEnabled {
-                    LabeledContent("Tổ hợp phím") { HotKeyRecorder(combo: $settings.hotKey) }
+                    LabeledContent("Shortcut") { HotKeyRecorder(combo: $settings.hotKey) }
                     if !settings.hotKeyRegistered {
-                        Text("Tổ hợp này đang bị app khác dùng — chọn tổ hợp khác.")
+                        Text("Another app uses this shortcut — record a different one.")
                             .font(.caption).foregroundStyle(.red)
                     }
                 }
             }
             Section("Menu bar") {
-                Picker("Hiển thị", selection: $settings.badgeMode) {
+                Picker("Show", selection: $settings.badgeMode) {
                     ForEach(BadgeMode.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 Stepper(value: $settings.ramWarnGB, in: 0...64, step: 1) {
-                    LabeledContent("Icon cam khi RAM dev ≥",
-                                   value: settings.ramWarnGB > 0 ? "\(Int(settings.ramWarnGB)) GB" : "tắt")
+                    LabeledContent("Orange icon when dev RAM ≥",
+                                   value: settings.ramWarnGB > 0 ? "\(Int(settings.ramWarnGB)) GB" : String(localized: "off"))
                 }
             }
         }
@@ -88,7 +101,7 @@ private struct PortSettings: View {
         @Bindable var settings = settings
         SettingsPane {
             Section {
-                Picker("Mở thư mục bằng", selection: $settings.editorBundleID) {
+                Picker("Open folders with", selection: $settings.editorBundleID) {
                     ForEach(EditorLauncher.installed()) { editor in
                         Text(editor.name).tag(Optional(editor.bundleID))
                     }
@@ -101,10 +114,10 @@ private struct PortSettings: View {
                     }
                 }
                 Stepper(value: $settings.idleHours, in: 1...72, step: 1) {
-                    LabeledContent("Coi là rảnh sau", value: "\(Int(settings.idleHours)) giờ")
+                    LabeledContent("Idle after", value: String(localized: "\(Int(settings.idleHours)) h"))
                 }
             } footer: {
-                Text("Dev server không có kết nối và không dùng CPU quá lâu được gắn nhãn “rảnh”.")
+                Text("Dev servers with no connections and no CPU for this long are tagged “idle”.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -119,28 +132,28 @@ private struct AgentSettings: View {
         @Bindable var settings = settings
         SettingsPane {
             Section {
-                Toggle("Thông báo khi agent xong / chờ bạn", isOn: $settings.notifyEnabled)
+                Toggle("Notify when an agent finishes or waits for you", isOn: $settings.notifyEnabled)
                     .onChange(of: settings.notifyEnabled) { _, enabled in
                         if enabled { Notifier.requestAuthorization() }
                     }
                 Stepper(value: $settings.notifyMinWorkSec, in: 0...600, step: 10) {
-                    LabeledContent("Chỉ báo task dài ≥", value: "\(Int(settings.notifyMinWorkSec))s")
+                    LabeledContent("Only for tasks of at least", value: "\(Int(settings.notifyMinWorkSec))s")
                 }
-                .help("Codex chỉ gửi sự kiện kết thúc (không có lúc bắt đầu) nên luôn được báo.")
+                .help("Codex reports only the end of a turn (no start), so every Codex turn notifies.")
                 Stepper(value: $settings.cpuIdleDebounceSec, in: 10...300, step: 10) {
-                    LabeledContent("Không có hook: xong sau", value: "\(Int(settings.cpuIdleDebounceSec))s CPU rảnh")
+                    LabeledContent("Without hooks: done after", value: String(localized: "\(Int(settings.cpuIdleDebounceSec))s of idle CPU"))
                 }
             }
             Section {
                 HookRow(name: "Claude Code", file: "~/.claude/settings.json", snippet: AgentEventURL.claudeHooksSnippet)
                 HookRow(name: "Codex", file: "~/.codex/config.toml", snippet: AgentEventURL.codexNotifySnippet)
-                LabeledContent("Sự kiện gần nhất") {
-                    Text(monitor.events.lastHookEvent ?? "chưa nhận").foregroundStyle(.secondary)
+                LabeledContent("Last event") {
+                    Text(monitor.events.lastHookEvent ?? String(localized: "none yet")).foregroundStyle(.secondary)
                 }
             } header: {
-                Text("Hook (báo chính xác, tức thì)")
+                Text("Hooks (exact, instant)")
             } footer: {
-                Text("Copy rồi gộp vào file cấu hình của agent. Foreman không tự sửa các file này.")
+                Text("Copy and merge into the agent's config file. Foreman never edits these files.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -163,9 +176,9 @@ private struct HookRow: View {
                     Text(file).font(.caption).foregroundStyle(.secondary).monospaced()
                 }
                 Spacer()
-                Button(expanded ? "Ẩn" : "Xem") { expanded.toggle() }
+                Button(expanded ? String(localized: "Hide") : String(localized: "View")) { expanded.toggle() }
                     .buttonStyle(.borderless)
-                Button(copied ? "Đã copy" : "Copy") {
+                Button(copied ? String(localized: "Copied") : String(localized: "Copy")) {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(snippet, forType: .string)
                     copied = true

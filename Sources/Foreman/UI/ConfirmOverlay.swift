@@ -28,7 +28,7 @@ struct ConfirmOverlay: View {
                 .frame(maxHeight: 220)
                 .fixedSize(horizontal: false, vertical: true)
                 HStack {
-                    Button("Huỷ", action: dismiss)
+                    Button("Cancel", action: dismiss)
                         .keyboardShortcut(.cancelAction)
                         .frame(maxWidth: .infinity)
                     Button(role: .destructive) {
@@ -36,7 +36,7 @@ struct ConfirmOverlay: View {
                         dismiss()
                         Task { await action() }
                     } label: {
-                        Text("Dừng").frame(maxWidth: .infinity)
+                        Text("Stop").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)

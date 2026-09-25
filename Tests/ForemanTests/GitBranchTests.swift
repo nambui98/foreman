@@ -82,7 +82,7 @@ struct PortProbeTests {
     @Test func summaries() {
         #expect(ProbeResult(status: 200, title: "App").summary == "200 · App")
         #expect(ProbeResult(status: 302).summary == "302")
-        #expect(ProbeResult(error: "timeout").summary == "lỗi: timeout")
+        #expect(ProbeResult(error: "timeout").summary == "error: timeout")
     }
 
     @Test func probesALocalHTTPServer() async throws {

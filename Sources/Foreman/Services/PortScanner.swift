@@ -6,8 +6,8 @@ enum PortScannerError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .timedOut: "lsof không phản hồi sau 3 giây"
-        case .failed(let status): "lsof lỗi (mã \(status))"
+        case .timedOut: String(localized: "lsof did not respond within 3 seconds")
+        case .failed(let status): String(localized: "lsof failed (code \(Int(status)))")
         }
     }
 }

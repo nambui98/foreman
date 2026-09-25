@@ -2,8 +2,14 @@ import SwiftUI
 
 /// Which list the panel shows.
 enum PanelTab: String, CaseIterable {
-    case ports = "Cổng"
-    case agents = "Agents"
+    case ports, agents
+
+    var title: String {
+        switch self {
+        case .ports: String(localized: "Ports")
+        case .agents: String(localized: "Agents")
+        }
+    }
 }
 
 struct HeaderView: View {
@@ -20,9 +26,9 @@ struct HeaderView: View {
                 Spacer()
                 Text(totals).font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 if tab == .ports, !monitor.cleanupCandidates.isEmpty {
-                    Button("Dọn (\(monitor.cleanupCandidates.count))", action: requestCleanup)
+                    Button("Clean up (\(monitor.cleanupCandidates.count))", action: requestCleanup)
                         .controlSize(.small)
-                        .help("Dừng các dev server mồ côi / rảnh lâu")
+                        .help("Stop orphaned or long-idle dev servers")
                 }
                 Button {
                     Task { await monitor.refresh() }
@@ -30,7 +36,7 @@ struct HeaderView: View {
                     Image(systemName: "arrow.clockwise")
                 }
                 .buttonStyle(.borderless)
-                .help("Làm mới")
+                .help("Refresh")
             }
             Picker("", selection: $tab) {
                 ForEach(PanelTab.allCases, id: \.self) { tab in
@@ -39,7 +45,8 @@ struct HeaderView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            TextField(tab == .ports ? "Tìm cổng, tên, thư mục…" : "Tìm agent, project, terminal…", text: $query)
+            TextField(tab == .ports ? String(localized: "Search ports, names, folders…")
+                                    : String(localized: "Search agents, projects, terminals…"), text: $query)
                 .textFieldStyle(.roundedBorder)
         }
         .padding(12)
@@ -47,8 +54,8 @@ struct HeaderView: View {
 
     private func label(for tab: PanelTab) -> String {
         switch tab {
-        case .ports: "\(tab.rawValue) (\(monitor.rows.count))"
-        case .agents: "\(tab.rawValue) (\(monitor.agents.count))"
+        case .ports: "\(tab.title) (\(monitor.rows.count))"
+        case .agents: "\(tab.title) (\(monitor.agents.count))"
         }
     }
 }

@@ -20,7 +20,7 @@ enum TerminalJumper {
         case .iTerm(let tty):
             return await focusByTTY(script: iTermScript(tty: tty), bundleID: iTermBundleID)
         case .app(let name):
-            return activate(appNamed: name) ? nil : "Không tìm thấy app \(name)"
+            return activate(appNamed: name) ? nil : String(localized: "App \(name) not found")
         }
     }
 
@@ -28,9 +28,9 @@ enum TerminalJumper {
 
     /// `orca terminal switch` with a fixed executable and argv (no shell); 3s timeout.
     private static func switchOrcaTerminal(handle: String) async -> String? {
-        guard TerminalLocator.isValidOrcaHandle(handle) else { return "Terminal handle không hợp lệ" }
+        guard TerminalLocator.isValidOrcaHandle(handle) else { return String(localized: "Invalid terminal handle") }
         guard let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: orcaBundleID) else {
-            return "Không tìm thấy Orca"
+            return String(localized: "Orca not found")
         }
         let cli = app.appending(path: "Contents/Resources/bin/orca")
         return await Task.detached(priority: .userInitiated) {
@@ -40,7 +40,7 @@ enum TerminalJumper {
 
     private nonisolated static func runOrcaSwitch(cli: URL, handle: String) -> String? {
         guard let result = run(cli, ["terminal", "switch", "--terminal", handle, "--json"]) else {
-            return "Không chạy được orca CLI"
+            return String(localized: "Couldn't run the orca CLI")
         }
         return orcaSwitchError(json: result.output, exitStatus: result.status)
     }
@@ -74,7 +74,7 @@ enum TerminalJumper {
         let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any]
         if exitStatus == 0, object?["ok"] as? Bool == true { return nil }
         let code = (object?["error"] as? [String: Any])?["code"] as? String
-        return "Orca không chuyển được tab" + (code.map { " (\($0))" } ?? "")
+        return String(localized: "Orca couldn't switch tabs") + (code.map { " (\($0))" } ?? "")
     }
 
     // MARK: Terminal.app / iTerm2
@@ -91,7 +91,8 @@ enum TerminalJumper {
             return nil
         }
         activate(bundleID: bundleID)
-        return result?.status == 0 ? "Không thấy tab của agent" : "AppleScript lỗi (cần quyền Automation?)"
+        return result?.status == 0 ? String(localized: "Agent's tab not found")
+            : String(localized: "AppleScript failed (Automation permission needed?)")
     }
 
     /// `tty` is validated as `/dev/ttysNNN` by `TerminalLocator`, so interpolation is safe.

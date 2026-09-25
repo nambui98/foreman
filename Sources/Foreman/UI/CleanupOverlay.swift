@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Confirmation for the "Dọn" button: one checkbox per flagged process. Orphans start checked,
+/// Confirmation for the "Clean up" button: one checkbox per flagged process. Orphans start checked,
 /// idle servers unchecked (they may be kept on purpose).
 struct CleanupOverlay: View {
     let candidates: [PortRow]
@@ -23,7 +23,7 @@ struct CleanupOverlay: View {
                 .contentShape(.rect)
                 .onTapGesture(perform: dismiss)
             VStack(alignment: .leading, spacing: 12) {
-                Text("Dọn tiến trình bị bỏ lại").font(.headline)
+                Text("Clean up leftover processes").font(.headline)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(candidates) { row in
@@ -43,7 +43,7 @@ struct CleanupOverlay: View {
                 .frame(maxHeight: 260)
                 .fixedSize(horizontal: false, vertical: true)
                 HStack {
-                    Button("Huỷ", action: dismiss)
+                    Button("Cancel", action: dismiss)
                         .keyboardShortcut(.cancelAction)
                         .frame(maxWidth: .infinity)
                     Button(role: .destructive) {
@@ -51,7 +51,7 @@ struct CleanupOverlay: View {
                         dismiss()
                         confirm(targets)
                     } label: {
-                        Text("Dừng \(selected.count)").frame(maxWidth: .infinity)
+                        Text("Stop \(selected.count)").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)

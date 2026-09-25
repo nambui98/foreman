@@ -39,7 +39,7 @@ final class PortMonitor {
     private let settings: AppSettings
     private var flagger = RowFlagger()
 
-    /// Dev rows flagged as orphan or idle, offered by the "Dọn" button.
+    /// Dev rows flagged as orphan or idle, offered by the "Clean up" button.
     var cleanupCandidates: [PortRow] { rows.filter { !$0.flags.isEmpty && $0.isKillable } }
 
     init(settings: AppSettings) {
@@ -283,7 +283,7 @@ final class PortMonitor {
         switch await agentController.stop(agentPid: agent.pid, table: .snapshot(), force: force) {
         case .exited, .notFound: agentStates[agent.pid] = nil
         case .stillRunning: agentStates[agent.pid] = .needsForce
-        case .notPermitted: agentStates[agent.pid] = .failed("Không đủ quyền")
+        case .notPermitted: agentStates[agent.pid] = .failed(String(localized: "Not permitted"))
         case .refused(let reason): agentStates[agent.pid] = .failed(reason)
         }
         await refresh()
@@ -330,7 +330,7 @@ final class PortMonitor {
         switch outcome {
         case .exited, .notFound: nil
         case .stillRunning: .needsForce
-        case .notPermitted: .failed("Không đủ quyền để dừng tiến trình này")
+        case .notPermitted: .failed(String(localized: "Not permitted to stop this process"))
         case .refused(let reason): .failed(reason)
         }
     }

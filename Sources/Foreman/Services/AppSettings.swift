@@ -7,10 +7,33 @@ enum BadgeMode: String, CaseIterable, Sendable {
 
     var title: String {
         switch self {
-        case .devCount: "Số tiến trình dev"
-        case .ram: "RAM của dev"
-        case .both: "Cả hai"
+        case .devCount: String(localized: "Dev process count")
+        case .ram: String(localized: "Dev RAM")
+        case .both: String(localized: "Both")
         }
+    }
+}
+
+/// Interface language. English is the default, whatever the system language is.
+enum AppLanguage: String, CaseIterable, Sendable {
+    case english = "en"
+    case vietnamese = "vi"
+
+    /// Shown in its own language so it can always be found.
+    var name: String {
+        switch self {
+        case .english: "English"
+        case .vietnamese: "Tiếng Việt"
+        }
+    }
+
+    static let defaultsKey = "appLanguage"
+
+    /// Makes the stored choice (English when none) the app's only localization, before any string is
+    /// loaded. The bundle resolves its language once per launch, so a change applies on restart.
+    static func applyStored(defaults: UserDefaults = .standard) {
+        let language = defaults.string(forKey: defaultsKey).flatMap(AppLanguage.init(rawValue:)) ?? .english
+        defaults.set([language.rawValue], forKey: "AppleLanguages")
     }
 }
 
@@ -31,10 +54,19 @@ final class AppSettings {
         static let hotKey = "hotKey"
     }
 
+    var language: AppLanguage {
+        didSet {
+            defaults.set(language.rawValue, forKey: AppLanguage.defaultsKey)
+            AppLanguage.applyStored(defaults: defaults)
+        }
+    }
+    /// Language the running app loaded its strings in; differs from `language` until a restart.
+    @ObservationIgnored let launchLanguage: AppLanguage
+
     var badgeMode: BadgeMode { didSet { defaults.set(badgeMode.rawValue, forKey: Key.badgeMode) } }
     /// Dev RAM total at or above this tints the menu bar badge.
     var ramWarnGB: Double { didSet { defaults.set(ramWarnGB, forKey: Key.ramWarnGB) } }
-    /// Editor used by "Mở trong …"; nil = first installed known editor.
+    /// Editor used by "Open in …"; nil = first installed known editor.
     var editorBundleID: String? { didSet { defaults.set(editorBundleID, forKey: Key.editorBundleID) } }
     /// A quiet dev server must be at least this old to count as idle.
     var idleHours: Double { didSet { defaults.set(idleHours, forKey: Key.idleHours) } }
@@ -57,6 +89,9 @@ final class AppSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        let language = defaults.string(forKey: AppLanguage.defaultsKey).flatMap(AppLanguage.init(rawValue:)) ?? .english
+        self.language = language
+        launchLanguage = language
         badgeMode = defaults.string(forKey: Key.badgeMode).flatMap(BadgeMode.init(rawValue:)) ?? .devCount
         ramWarnGB = defaults.object(forKey: Key.ramWarnGB) as? Double ?? 8
         editorBundleID = defaults.string(forKey: Key.editorBundleID)

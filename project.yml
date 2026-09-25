@@ -1,13 +1,14 @@
 name: Foreman
 options:
   bundleIdPrefix: com.nambui
+  developmentLanguage: en
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.0.0"
+    MARKETING_VERSION: "1.1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -28,13 +29,15 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, vi]
         LSApplicationCategoryType: public.app-category.developer-tools
         CFBundleURLTypes:
           - CFBundleURLName: com.nambui.foreman.agent-event
             CFBundleURLSchemes: [foreman]
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        NSAppleEventsUsageDescription: Foreman chọn đúng tab Terminal/iTerm đang chạy agent khi bạn bấm ↗.
+        NSAppleEventsUsageDescription: Foreman selects the Terminal or iTerm tab running an agent when you click ↗.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nambui.foreman
@@ -59,3 +62,6 @@ schemes:
         ForemanTests: [test]
     test:
       targets: [ForemanTests]
+      # Assertions check English strings; the host app would otherwise use the saved language.
+      commandLineArguments:
+        "-AppleLanguages (en)": true

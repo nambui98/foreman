@@ -6,7 +6,7 @@ enum ProcessGroup: Int, CaseIterable, Comparable, Sendable {
         switch self {
         case .dev: "Dev"
         case .dataContainer: "Database / Container"
-        case .system: "Hệ thống"
+        case .system: String(localized: "System")
         }
     }
 
@@ -52,16 +52,16 @@ enum RowFlag: Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .parentExited, .folderDeleted: "mồ côi"
-        case .idle: "rảnh"
+        case .parentExited, .folderDeleted: String(localized: "orphan")
+        case .idle: String(localized: "idle")
         }
     }
 
     var reason: String {
         switch self {
-        case .parentExited: "tiến trình cha đã thoát"
-        case .folderDeleted: "thư mục đã bị xoá"
-        case .idle: "không có kết nối, không dùng CPU"
+        case .parentExited: String(localized: "parent process exited")
+        case .folderDeleted: String(localized: "folder was deleted")
+        case .idle: String(localized: "no connections, no CPU")
         }
     }
 }

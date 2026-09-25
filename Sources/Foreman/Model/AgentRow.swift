@@ -8,10 +8,10 @@ enum AgentStatus: Int, Comparable, Sendable {
 
     var title: String {
         switch self {
-        case .waiting: "Chờ bạn"
-        case .working: "Đang chạy"
-        case .idle: "Rảnh"
-        case .paused: "Tạm dừng"
+        case .waiting: String(localized: "Waiting for you")
+        case .working: String(localized: "Working")
+        case .idle: String(localized: "Idle")
+        case .paused: String(localized: "Paused")
         }
     }
 }

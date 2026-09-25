@@ -38,7 +38,7 @@ final class AgentEventCenter {
 
     func handleHook(_ kind: AgentEventKind, agent: AgentRow?, now: Date = Date()) {
         lastHookEvent = "\(now.formatted(date: .omitted, time: .standard)) · \(kind.rawValue) · "
-            + (agent?.label ?? "không khớp agent nào")
+            + (agent?.label ?? String(localized: "matches no agent"))
         guard let agent else { return }
         let id = Self.identity(of: agent)
         lastHook[id] = now
@@ -49,10 +49,11 @@ final class AgentEventCenter {
             let duration = taskStart.removeValue(forKey: id).map { now.timeIntervalSince($0) }
             // Without a start event (e.g. Codex notify) the task length is unknown: notify.
             if let duration, duration < settings.notifyMinWorkSec { return }
-            let body = duration.map { "Xong việc sau \(Formatters.uptime(seconds: Int($0)))" } ?? "Xong việc"
+            let body = duration.map { String(localized: "Done after \(Formatters.uptime(seconds: Int($0)))") }
+                ?? String(localized: "Done")
             emit(Notice(agent: id, kind: .stop, title: agent.label, body: body), now: now)
         case .input:
-            emit(Notice(agent: id, kind: .input, title: agent.label, body: "Đang chờ bạn trả lời"), now: now)
+            emit(Notice(agent: id, kind: .input, title: agent.label, body: String(localized: "Waiting for your answer")), now: now)
         }
     }
 
@@ -73,7 +74,7 @@ final class AgentEventCenter {
             minWork: settings.notifyMinWorkSec, idleDebounce: settings.cpuIdleDebounceSec, excluded: hooked)
         for id in finished {
             guard let agent = agents.first(where: { Self.identity(of: $0) == id }) else { continue }
-            emit(Notice(agent: id, kind: .stop, title: agent.label, body: "Có vẻ đã xong việc (CPU đã rảnh)"), now: now)
+            emit(Notice(agent: id, kind: .stop, title: agent.label, body: String(localized: "Looks done (CPU went idle)")), now: now)
         }
     }
 
@@ -94,9 +95,9 @@ final class AgentEventCenter {
                 let duration = state.startedAt.timeIntervalSince(previous.startedAt)
                 guard duration >= settings.notifyMinWorkSec else { continue }
                 emit(Notice(agent: id, kind: .stop, title: agent.label,
-                            body: "Xong việc sau \(Formatters.uptime(seconds: Int(duration)))"), now: now)
+                            body: String(localized: "Done after \(Formatters.uptime(seconds: Int(duration)))")), now: now)
             case (_, .blocked) where previous.phase != .blocked:
-                emit(Notice(agent: id, kind: .input, title: agent.label, body: "Đang chờ bạn trả lời"), now: now)
+                emit(Notice(agent: id, kind: .input, title: agent.label, body: String(localized: "Waiting for your answer")), now: now)
             default:
                 continue
             }

@@ -21,7 +21,7 @@ struct BadgeLabel: View {
                 Text(text).monospacedDigit()
             }
         }
-        .accessibilityLabel("Foreman, \(count) dev ports, \(Formatters.memory(memoryBytes))")
+        .accessibilityLabel(String(localized: "Foreman, \(count) dev ports, \(Formatters.memory(memoryBytes))"))
     }
 
     /// `3`, `3.2G`, `3 · 3.2G`; nil when there is nothing to show.

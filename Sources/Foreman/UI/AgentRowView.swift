@@ -13,7 +13,8 @@ struct AgentRowView: View {
         HStack(alignment: .top, spacing: 10) {
             Circle().fill(statusColor).frame(width: 8, height: 8).padding(.top, 6)
                 .help(agent.status == .paused ? agent.status.title
-                      : agent.status.title + (agent.orcaState != nil ? " · theo Orca" : " · ước lượng theo CPU"))
+                      : agent.status.title + " · "
+                        + (agent.orcaState != nil ? String(localized: "from Orca") : String(localized: "estimated from CPU")))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(agent.kind.displayName).font(.system(.body, weight: .medium)).lineLimit(1)
@@ -57,7 +58,7 @@ struct AgentRowView: View {
         .onHover { isHovering = $0 }
         .contextMenu {
             if let terminal = agent.terminal {
-                Button("Mở terminal (\(terminal.appName))") { Task { await monitor.jumpToTerminal(agent) } }
+                Button("Open terminal (\(terminal.appName))") { Task { await monitor.jumpToTerminal(agent) } }
             }
             Button("Copy PID") {
                 NSPasteboard.general.clearContents()
@@ -65,9 +66,9 @@ struct AgentRowView: View {
             }
             if let cwd = agent.cwd {
                 if let editor = EditorLauncher.preferred(bundleID: settings.editorBundleID) {
-                    Button("Mở trong \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
+                    Button("Open in \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
                 }
-                Button("Mở thư mục trong Finder") {
+                Button("Show in Finder") {
                     NSWorkspace.shared.open(URL(fileURLWithPath: cwd, isDirectory: true))
                 }
             }
@@ -85,10 +86,10 @@ struct AgentRowView: View {
         }
     }
 
-    /// `Orca · ttys003 · 1d 15h · 4 tiến trình con`
+    /// `Orca · ttys003 · 1d 15h · 4 child processes`
     private var context: String {
         let uptime = Formatters.uptime(seconds: Int(Date().timeIntervalSince1970) - Int(agent.startSec))
-        return [agent.host, agent.tty, uptime, "\(agent.childCount) tiến trình con"]
+        return [agent.host, agent.tty, uptime, String(localized: "\(agent.childCount) child processes")]
             .compactMap { $0 }.joined(separator: " · ")
     }
 
@@ -100,10 +101,10 @@ struct AgentRowView: View {
         .disabled(agent.terminal == nil)
         .help(agent.terminal.map { locator in
             switch locator {
-            case .app: "Mở \(locator.appName) (không xác định được tab)"
-            default: "Mở tab terminal của agent trong \(locator.appName)"
+            case .app: String(localized: "Open \(locator.appName) (tab unknown)")
+            default: String(localized: "Open the agent's terminal tab in \(locator.appName)")
             }
-        } ?? "Không xác định được terminal")
+        } ?? String(localized: "Terminal not found"))
     }
 
     @ViewBuilder private var pauseControl: some View {
@@ -112,7 +113,7 @@ struct AgentRowView: View {
                 Image(systemName: "play.circle").font(.title3)
             }
             .buttonStyle(.borderless)
-            .help("Chạy tiếp các tiến trình con")
+            .help("Resume the child processes")
         } else {
             Button { Task { await monitor.pause(agent) } } label: {
                 Image(systemName: "pause.circle").font(.title3)
@@ -120,8 +121,8 @@ struct AgentRowView: View {
             .buttonStyle(.borderless)
             .disabled(agent.childCount == 0)
             .help(agent.childCount == 0
-                  ? "Không có tiến trình con để tạm dừng"
-                  : "Tạm dừng các tiến trình con (lệnh, MCP, dev server). Agent vẫn chạy; lệnh đang chờ có thể timeout.")
+                  ? String(localized: "No child processes to pause")
+                  : String(localized: "Pause the child processes (commands, MCP, dev servers). The agent keeps running; a command it waits on may time out."))
         }
     }
 
@@ -132,7 +133,7 @@ struct AgentRowView: View {
         case .needsForce:
             Button("Force") { Task { await monitor.stop(agent, force: true) } }
                 .buttonStyle(.borderedProminent).tint(.red).controlSize(.small)
-                .help("Vẫn còn chạy sau SIGTERM — gửi SIGKILL")
+                .help("Still running after SIGTERM — send SIGKILL")
         default:
             Button {
                 requestStop(PendingAgentStop(agent: agent, members: monitor.stopPreview(agent)))
@@ -141,7 +142,7 @@ struct AgentRowView: View {
             }
             .buttonStyle(.borderless)
             .foregroundStyle(.red)
-            .help("Dừng agent và toàn bộ tiến trình con")
+            .help("Stop the agent and all its child processes")
         }
     }
 }
@@ -152,14 +153,14 @@ struct PendingAgentStop: Identifiable {
     let members: [String]
     var id: Int32 { agent.pid }
 
-    var title: String { "Dừng \(agent.label)?" }
+    var title: String { String(localized: "Stop \(agent.label)?") }
 
     var message: String {
         let shown = members.prefix(8).joined(separator: ", ")
-        let more = members.count > 8 ? " và \(members.count - 8) tiến trình khác" : ""
-        var text = "Sẽ gửi SIGTERM tới \(members.count) tiến trình: \(shown)\(more)."
+        let more = members.count > 8 ? String(localized: " and \(members.count - 8) more") : ""
+        var text = String(localized: "Will send SIGTERM to \(members.count) processes: \(shown)\(more).")
         if let hint = agent.kind.resumeHint {
-            text += "\n\nMở lại phiên sau bằng: \(hint)"
+            text += "\n\n" + String(localized: "Reopen the session later with: \(hint)")
         }
         return text
     }

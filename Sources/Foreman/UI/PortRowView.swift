@@ -25,7 +25,7 @@ struct PortRowView: View {
                     if row.inboundConnections > 0 {
                         Label("\(row.inboundConnections)", systemImage: "arrow.left.arrow.right")
                             .font(.caption2).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
-                            .help("\(row.inboundConnections) kết nối đang mở tới tiến trình này")
+                            .help("\(row.inboundConnections) open connections to this process")
                     }
                 }
                 if let detail = Formatters.abbreviatePath(row.cwd) ?? row.commandLine {
@@ -89,7 +89,7 @@ struct PortRowView: View {
                 Image(systemName: "safari").font(.title3)
             }
             .buttonStyle(.borderless)
-            .help("Mở http://localhost:\(String(port))" + (probes[port].map { "\n\($0.summary)" } ?? ""))
+            .help(String(localized: "Open http://localhost:\(String(port))") + (probes[port].map { "\n\($0.summary)" } ?? ""))
         } else {
             Menu {
                 ForEach(row.ports, id: \.self) { port in
@@ -103,7 +103,7 @@ struct PortRowView: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Mở trong trình duyệt")
+            .help("Open in browser")
         }
     }
 
@@ -118,7 +118,7 @@ struct PortRowView: View {
         case .needsForce:
             Button("Force") { perform(force: true) }
                 .buttonStyle(.borderedProminent).tint(.red).controlSize(.small)
-                .help("Vẫn còn chạy sau SIGTERM — gửi SIGKILL")
+                .help("Still running after SIGTERM — send SIGKILL")
         default:
             Button {
                 // ⌥-click skips the grace period and sends SIGKILL.
@@ -129,19 +129,20 @@ struct PortRowView: View {
             .buttonStyle(.borderless)
             .foregroundStyle(row.isKillable ? .red : .secondary)
             .disabled(!row.isKillable)
-            .help(row.isKillable ? "Dừng (SIGTERM) · ⌥-click: SIGKILL" : "Tiến trình của user khác — không đủ quyền")
+            .help(row.isKillable ? String(localized: "Stop (SIGTERM) · ⌥-click: SIGKILL")
+                                 : String(localized: "Another user's process — not permitted"))
         }
     }
 
     @ViewBuilder private var contextMenu: some View {
         if row.isKillable {
-            Button("Dừng (SIGTERM)") { perform(force: false) }
+            Button("Stop (SIGTERM)") { perform(force: false) }
             Button("Force Kill (SIGKILL)") { perform(force: true) }
-            Button("Dừng cả process group") { perform(force: false, wholeGroup: true) }
+            Button("Stop the whole process group") { perform(force: false, wholeGroup: true) }
             Divider()
         }
         ForEach(row.ports, id: \.self) { port in
-            Button("Mở localhost:\(String(port))") { Self.openInBrowser(port) }
+            Button("Open localhost:\(String(port))") { Self.openInBrowser(port) }
         }
         Button("Copy PID") {
             NSPasteboard.general.clearContents()
@@ -149,9 +150,9 @@ struct PortRowView: View {
         }
         if let cwd = row.cwd, cwd != "/" {
             if let editor = EditorLauncher.preferred(bundleID: settings.editorBundleID) {
-                Button("Mở trong \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
+                Button("Open in \(editor.name)") { EditorLauncher.open(folder: cwd, in: editor) }
             }
-            Button("Mở thư mục trong Finder") {
+            Button("Show in Finder") {
                 NSWorkspace.shared.open(URL(fileURLWithPath: cwd, isDirectory: true))
             }
         }
@@ -183,7 +184,7 @@ struct PortRowView: View {
     }
 }
 
-/// `mồ côi` / `rảnh 5h` capsule; the tooltip gives the reason.
+/// `orphan` / `idle 5h` capsule; the tooltip gives the reason.
 struct FlagBadge: View {
     let flag: RowFlag
     let row: PortRow
@@ -214,15 +215,15 @@ struct PendingKill: Identifiable {
     var id: Int32 { row.pid }
 
     var message: String {
-        guard wholeGroup else { return "Đây là ứng dụng hệ thống hoặc ứng dụng người dùng, không phải dev server." }
+        guard wholeGroup else { return String(localized: "This is a system or user app, not a dev server.") }
         let shown = members.prefix(8).joined(separator: ", ")
-        let more = members.count > 8 ? " và \(members.count - 8) tiến trình khác" : ""
-        return "Sẽ dừng \(members.count) tiến trình: \(shown)\(more)."
+        let more = members.count > 8 ? String(localized: " and \(members.count - 8) more") : ""
+        return String(localized: "Will stop \(members.count) processes: \(shown)\(more).")
     }
 
     var title: String {
         let signal = force ? "SIGKILL" : "SIGTERM"
-        let target = wholeGroup ? "process group của \(row.name)" : "\(row.name) (PID \(row.pid))"
-        return "Gửi \(signal) tới \(target)?"
+        let target = wholeGroup ? String(localized: "the process group of \(row.name)") : "\(row.name) (PID \(row.pid))"
+        return String(localized: "Send \(signal) to \(target)?")
     }
 }
