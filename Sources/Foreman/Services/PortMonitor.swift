@@ -34,6 +34,12 @@ final class PortMonitor {
     private var branchCache = GitBranch.Cache()
     private var orcaReader = OrcaStatusReader()
     private var claudeReader = ClaudeSessionReader()
+    /// Today's token usage, refreshed only while the panel is open.
+    private(set) var usage: UsageSnapshot?
+    private var usageTracker = UsageTracker()
+    private var usageUpdating = false
+    private var lastUsageUpdate: ContinuousClock.Instant?
+    static let usageInterval: Duration = .seconds(10)
     /// Orca terminal handle → task title; fetched only while the panel is open.
     private var taskTitles: [String: String] = [:]
     private var lastTitleFetch: ContinuousClock.Instant?
@@ -131,7 +137,10 @@ final class PortMonitor {
             branchCache = snapshot.branches
             self.orcaReader = snapshot.orcaReader
             self.claudeReader = snapshot.claudeReader
-            if includePorts { await refreshTaskTitlesIfDue() }
+            if includePorts {
+                await refreshTaskTitlesIfDue()
+                refreshUsageIfDue()
+            }
             updateAgents(from: snapshot)
             guard includePorts else { return }
 
@@ -353,6 +362,27 @@ final class PortMonitor {
         let cli = app.appending(path: "Contents/Resources/bin/orca")
         if let titles = await Task.detached(priority: .utility, operation: { OrcaTerminalTitles.list(orcaCLI: cli) }).value {
             taskTitles = titles
+        }
+    }
+
+    // MARK: Usage
+
+    /// Reads new transcript lines in the background (first pass ~0.7s, then a few ms).
+    private func refreshUsageIfDue() {
+        guard isPanelVisible, !usageUpdating else { return }
+        if let last = lastUsageUpdate, ContinuousClock.now - last < Self.usageInterval { return }
+        lastUsageUpdate = .now
+        usageUpdating = true
+        let tracker = usageTracker
+        Task {
+            let (updated, snapshot) = await Task.detached(priority: .utility) {
+                var tracker = tracker
+                let snapshot = tracker.update()
+                return (tracker, snapshot)
+            }.value
+            usageTracker = updated
+            usage = snapshot
+            usageUpdating = false
         }
     }
 

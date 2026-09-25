@@ -28,4 +28,20 @@ enum Formatters {
         if path == home { return "~" }
         return path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
     }
+
+    /// `845K`, `12.3M`, `1.31B` tokens.
+    static func tokens(_ count: Int) -> String {
+        let value = Double(count)
+        switch value {
+        case ..<1_000: return "\(count)"
+        case ..<1_000_000: return String(format: "%.0fK", value / 1_000)
+        case ..<1_000_000_000: return String(format: value < 10_000_000 ? "%.1fM" : "%.0fM", value / 1_000_000)
+        default: return String(format: "%.2fB", value / 1_000_000_000)
+        }
+    }
+
+    /// `$0.84`, `$18.40`, `$408`.
+    static func dollars(_ amount: Double) -> String {
+        String(format: amount >= 100 ? "$%.0f" : "$%.2f", amount)
+    }
 }

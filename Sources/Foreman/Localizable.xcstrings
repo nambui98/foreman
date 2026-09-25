@@ -213,12 +213,42 @@
         }
       }
     },
+    "Codex %lldh": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex %lldh"
+          }
+        }
+      }
+    },
+    "Codex %lldm": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex %lldp"
+          }
+        }
+      }
+    },
     "Codex reports only the end of a turn (no start), so every Codex turn notifies.": {
       "localizations": {
         "vi": {
           "stringUnit": {
             "state": "translated",
             "value": "Codex chỉ gửi sự kiện kết thúc (không có lúc bắt đầu) nên luôn được báo."
+          }
+        }
+      }
+    },
+    "Codex week": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex tuần"
           }
         }
       }
@@ -422,6 +452,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terminal handle không hợp lệ"
+          }
+        }
+      }
+    },
+    "Keep the Mac awake while an agent works": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giữ Mac thức khi agent đang làm"
+          }
+        }
+      }
+    },
+    "Keeping the Mac awake while an agent works": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang giữ Mac thức vì có agent đang làm"
           }
         }
       }
@@ -726,6 +776,16 @@
         }
       }
     },
+    "Prevents idle sleep only while an agent is working; the display can still turn off.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ chặn máy tự ngủ khi có agent đang làm; màn hình vẫn có thể tắt."
+          }
+        }
+      }
+    },
     "Process group %lld is not safe to stop": {
       "localizations": {
         "vi": {
@@ -766,6 +826,16 @@
         }
       }
     },
+    "Resets %@": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Làm mới lúc %@"
+          }
+        }
+      }
+    },
     "Restart": {
       "localizations": {
         "vi": {
@@ -786,12 +856,32 @@
         }
       }
     },
+    "Restart container": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khởi động lại container"
+          }
+        }
+      }
+    },
     "Resume the child processes": {
       "localizations": {
         "vi": {
           "stringUnit": {
             "state": "translated",
             "value": "Chạy tiếp các tiến trình con"
+          }
+        }
+      }
+    },
+    "Runs docker stop. Start it again with docker start or docker compose up.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạy docker stop. Bật lại bằng docker start hoặc docker compose up."
           }
         }
       }
@@ -936,6 +1026,26 @@
         }
       }
     },
+    "Stop container": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng container"
+          }
+        }
+      }
+    },
+    "Stop container %@?": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dừng container %@?"
+          }
+        }
+      }
+    },
     "Stop orphaned or long-idle dev servers": {
       "localizations": {
         "vi": {
@@ -1002,6 +1112,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Đây là ứng dụng hệ thống hoặc ứng dụng người dùng, không phải dev server."
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôm nay"
+          }
+        }
+      }
+    },
+    "Today: %@ tokens, ≈ %@ at API prices": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôm nay: %@ token, ≈ %@ theo giá API"
+          }
+        }
+      }
+    },
+    "Token counts from Claude Code transcripts, priced at API list prices. A Claude subscription is not billed per token.": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Số token lấy từ transcript của Claude Code, quy đổi theo giá API. Gói Claude trả theo tháng không bị tính tiền theo token."
           }
         }
       }
@@ -1086,6 +1226,16 @@
         }
       }
     },
+    "docker %@ failed": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "docker %@ lỗi"
+          }
+        }
+      }
+    },
     "error: %@": {
       "localizations": {
         "vi": {
@@ -1112,6 +1262,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "thư mục đã bị xoá"
+          }
+        }
+      }
+    },
+    "from Claude Code": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "theo Claude Code"
           }
         }
       }

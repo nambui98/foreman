@@ -60,6 +60,10 @@ struct PanelView: View {
     }
 
     @ViewBuilder private var agentsContent: some View {
+        if let usage = monitor.usage {
+            UsageSummaryView(usage: usage)
+            Divider()
+        }
         if visibleAgents.isEmpty {
             ContentUnavailableView(query.isEmpty ? String(localized: "No agents running") : String(localized: "No matches"),
                                    systemImage: "sparkles")

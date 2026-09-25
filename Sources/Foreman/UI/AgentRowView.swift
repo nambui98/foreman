@@ -48,6 +48,10 @@ struct AgentRowView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(Formatters.cpu(agent.cpuPercent))
                 Text(Formatters.memory(agent.memoryBytes)).foregroundStyle(.secondary)
+                if let usage = agent.claudeSessionId.flatMap({ monitor.usage?.claudeBySession[$0] }), usage.total > 0 {
+                    Text(Formatters.dollars(usage.cost)).foregroundStyle(.secondary)
+                        .help(String(localized: "Today: \(Formatters.tokens(usage.total)) tokens, ≈ \(Formatters.dollars(usage.cost)) at API prices"))
+                }
             }
             .font(.caption).monospacedDigit()
             jumpControl
