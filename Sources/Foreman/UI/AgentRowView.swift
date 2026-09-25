@@ -20,10 +20,9 @@ struct AgentRowView: View {
                         Text(member).font(.caption).foregroundStyle(.tint).lineLimit(1)
                     }
                     Text(verbatim: String(agent.pid)).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
+                        .fixedSize()
                     if agent.status == .paused || agent.status == .waiting {
-                        Text(agent.status.title).font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(statusColor.opacity(0.2), in: .capsule).foregroundStyle(statusColor)
+                        Chip(text: agent.status.title, color: statusColor)
                     }
                 }
                 if let title = agent.taskTitle {
@@ -31,12 +30,21 @@ struct AgentRowView: View {
                 }
                 if let cwd = Formatters.abbreviatePath(agent.cwd) {
                     HStack(spacing: 4) {
-                        Text(cwd).lineLimit(1).truncationMode(.middle)
+                        if let project = agent.project {
+                            Text(verbatim: project).fontWeight(.semibold).foregroundStyle(.primary)
+                                .lineLimit(1).layoutPriority(2)
+                            if let sub = agent.projectSubpath {
+                                Text(verbatim: "› \(sub)").lineLimit(1).truncationMode(.middle)
+                            }
+                        } else {
+                            Text(cwd).lineLimit(1).truncationMode(.middle)
+                        }
                         if let branch = agent.gitBranch {
                             BranchLabel(branch: branch)
                         }
                     }
                     .font(.caption).foregroundStyle(.secondary)
+                    .help(agent.cwd ?? "")
                 }
                 Text(context).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
                 if case .failed(let message) = state {

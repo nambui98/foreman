@@ -8,7 +8,7 @@ struct BranchLabel: View {
     var body: some View {
         Label(branch, systemImage: "arrow.triangle.branch")
             .lineLimit(1).truncationMode(.tail)
-            .frame(maxWidth: 120, alignment: .leading)
+            .frame(maxWidth: 100, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
             .layoutPriority(1)
             .help(branch)

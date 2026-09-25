@@ -1,9 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// The panel torn off the menu bar: a floating window that stays above other windows (full-screen
-/// apps included), doesn't close when you click elsewhere, can be dragged anywhere and remembers
-/// where it was. Closing it (or the pin button) puts the panel back in the menu bar.
+/// The panel torn off the menu bar: a floating, title-bar-less window with the same rounded
+/// material look as the menu bar panel. It stays above other windows (full-screen apps included),
+/// doesn't close when you click elsewhere, can be dragged by its background anywhere and remembers
+/// where it was. The pin button puts the panel back in the menu bar.
 @MainActor
 final class FloatingPanelController: NSObject, NSWindowDelegate {
     static let shared = FloatingPanelController()
@@ -43,32 +44,37 @@ final class FloatingPanelController: NSObject, NSWindowDelegate {
         }
     }
 
-    // Closing the window re-attaches the panel instead of destroying it.
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        attach()
-        return false
-    }
-
     private func makePanelIfNeeded() -> NSPanel? {
         if let panel { return panel }
         guard let monitor, let settings else { return nil }
-        let panel = NSPanel(
+        let panel = KeyablePanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 640),
-            styleMask: [.titled, .closable, .fullSizeContentView],
-            backing: .buffered, defer: false)
-        panel.titleVisibility = .hidden
-        panel.titlebarAppearsTransparent = true
+            styleMask: [.borderless], backing: .buffered, defer: false)
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
         panel.isMovableByWindowBackground = true
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.delegate = self
-        panel.contentView = NSHostingView(
-            rootView: PanelView(isDetached: true).environment(monitor).environment(settings))
+        let hosting = NSHostingView(rootView: PanelView(isDetached: true).environment(monitor).environment(settings))
+        hosting.sizingOptions = [.intrinsicContentSize]  // the window always fits the panel exactly
+        hosting.wantsLayer = true
+        hosting.layer?.cornerRadius = 12
+        hosting.layer?.masksToBounds = true
+        panel.contentView = hosting
+        panel.setContentSize(hosting.fittingSize)
         panel.center()
-        panel.setFrameAutosaveName("ForemanFloatingPanel")  // restores the last position
+        panel.setFrameAutosaveName("ForemanFloatingPanel")  // restores the last position…
+        panel.setContentSize(hosting.fittingSize)  // …but never an old, stale size
         self.panel = panel
         return panel
     }
+}
+
+/// Borderless windows can't become key by default; the search field needs keyboard focus.
+private final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
 }

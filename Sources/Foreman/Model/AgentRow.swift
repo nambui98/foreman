@@ -41,6 +41,9 @@ struct AgentRow: Identifiable, Sendable, Equatable {
     var teamMember: String? = nil
     var terminal: TerminalLocator? = nil
     var gitBranch: String? = nil
+    /// Git checkout name and the folder inside it, e.g. `Zunera` + `apps/server`.
+    var project: String? = nil
+    var projectSubpath: String? = nil
     /// State reported by Orca for the agent's pane, when it runs in Orca.
     var orcaState: OrcaAgentState? = nil
     /// Where `status` came from, for the status dot's tooltip.

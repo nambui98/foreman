@@ -8,6 +8,7 @@ struct AgentTreeUsage: Sendable, Equatable {
     var childCount = 0
     var cwd: String?
     var gitBranch: String?
+    var repository: GitBranch.Repository?
 }
 
 enum AgentRowBuilder {
@@ -38,6 +39,8 @@ enum AgentRowBuilder {
                 terminal: agent.terminal, gitBranch: tree?.gitBranch, orcaState: orcaState)
             row.statusSource = orcaState != nil ? .orca : session?.status != nil ? .claude : .cpu
             row.claudeSessionId = session?.sessionId
+            row.project = tree?.repository?.name
+            row.projectSubpath = tree?.cwd.flatMap { tree?.repository?.subpath(of: $0) }
             return row
         }
         .sorted { ($0.status, UInt64.max - ($0.memoryBytes ?? 0), $0.pid) < ($1.status, UInt64.max - ($1.memoryBytes ?? 0), $1.pid) }

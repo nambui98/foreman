@@ -23,11 +23,11 @@ struct HeaderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(spacing: 6) {
+                Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 18, height: 18)
                 Text("Foreman").font(.headline)
                     .help(isDetached ? "" : String(localized: "Drag down to detach the panel"))
-                Spacer()
-                Text(totals).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Spacer(minLength: 8)
                 if tab == .ports, !monitor.cleanupCandidates.isEmpty {
                     Button("Clean up (\(monitor.cleanupCandidates.count))", action: requestCleanup)
                         .controlSize(.small)
@@ -46,15 +46,22 @@ struct HeaderView: View {
                 .buttonStyle(.borderless)
                 .help(isDetached ? String(localized: "Attach to the menu bar") : String(localized: "Detach as a floating window"))
             }
+            .frame(height: 22)
             .contentShape(.rect)
             .gesture(DragGesture(minimumDistance: 12).onChanged(tearOff))
-            Picker("", selection: $tab) {
-                ForEach(PanelTab.allCases, id: \.self) { tab in
-                    Text(label(for: tab)).tag(tab)
+            HStack(spacing: 8) {
+                Picker("", selection: $tab) {
+                    ForEach(PanelTab.allCases, id: \.self) { tab in
+                        Text(label(for: tab)).tag(tab)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                Spacer(minLength: 4)
+                Text(totals).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                    .lineLimit(1).truncationMode(.tail)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             TextField(tab == .ports ? String(localized: "Search ports, names, folders…")
                                     : String(localized: "Search agents, projects, terminals…"), text: $query)
                 .textFieldStyle(.roundedBorder)

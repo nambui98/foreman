@@ -222,7 +222,9 @@ final class PortMonitor {
             let members = table.descendants(of: agent.pid)
             let cwd = ProcessInspector.currentDirectory(pid: agent.pid)
             var tree = AgentTreeUsage(
-                childCount: members.count, cwd: cwd, gitBranch: cwd.flatMap { branches.branch(cwd: $0) })
+                childCount: members.count, cwd: cwd, gitBranch: nil)
+            tree.repository = cwd.flatMap { branches.repository(cwd: $0) }
+            tree.gitBranch = tree.repository?.branch
             if let cwd { folders.insert(cwd) }
             for pid in [agent.pid] + members {
                 guard let sample = ProcessInspector.usage(pid: pid) else { continue }

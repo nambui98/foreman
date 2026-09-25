@@ -15,7 +15,6 @@ struct PanelView: View {
     var body: some View {
         VStack(spacing: 0) {
             HeaderView(query: $query, tab: $tab, totals: totals, isDetached: isDetached) { showCleanup = true }
-                .padding(.top, isDetached ? 16 : 0)  // room for the floating window's close button
             Divider()
             // Every tab and state gets the same height: MenuBarExtra keeps the window's bottom edge
             // when it resizes, so a height change on tab switch pushed the header under the menu bar.
@@ -31,6 +30,8 @@ struct PanelView: View {
         }
         .frame(width: 420)
         .background { if !isDetached { PanelWindowAnchor() } }
+        // The menu bar panel gets its material from MenuBarExtra; the floating window draws its own.
+        .background(isDetached ? AnyShapeStyle(.thickMaterial) : AnyShapeStyle(.clear))
         .onAppear { monitor.setPanelOpen(true) }
         .onDisappear { monitor.setPanelOpen(false) }
         .overlay {

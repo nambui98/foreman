@@ -27,36 +27,36 @@ struct PortRowView: View {
             portChips
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text(row.name).font(.system(.body, weight: .medium)).lineLimit(1)
+                    Text(row.name).font(.system(.body, weight: .medium)).lineLimit(1).truncationMode(.tail)
                     Text(verbatim: String(row.pid)).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
+                        .fixedSize()
                     if let framework = row.framework {
-                        Text(verbatim: framework).font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(.tint.opacity(0.12), in: .capsule).foregroundStyle(.tint)
+                        Chip(text: framework, color: .accentColor)
                     }
                     ForEach(row.flags.sorted(by: { $0.isOrphan && !$1.isOrphan }), id: \.self) { flag in
                         FlagBadge(flag: flag, row: row)
                     }
                     if row.inboundConnections > 0 {
                         Label("\(row.inboundConnections)", systemImage: "arrow.left.arrow.right")
-                            .font(.caption2).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                            .font(.caption2).foregroundStyle(.secondary).labelStyle(.titleAndIcon).fixedSize()
                             .help("\(row.inboundConnections) open connections to this process")
                     }
                 }
                 if let detail = Formatters.abbreviatePath(row.cwd) ?? row.commandLine {
                     HStack(spacing: 4) {
-                        if let project = row.project {
-                            // `Zunera › apps/server` reads better than a long absolute path.
-                            Text(verbatim: project).fontWeight(.semibold).foregroundStyle(.primary).lineLimit(1)
+                        // Dev servers: `Zunera › apps/server ⑂ main`. Others (Homebrew services, apps)
+                        // just show their folder: a project name would only be noise there.
+                        if row.group == .dev, let project = row.project {
+                            Text(verbatim: project).fontWeight(.semibold).foregroundStyle(.primary)
+                                .lineLimit(1).layoutPriority(2)
                             if let sub = row.projectSubpath {
                                 Text(verbatim: "› \(sub)").lineLimit(1).truncationMode(.middle)
                             }
+                            if let branch = row.gitBranch {
+                                BranchLabel(branch: branch)
+                            }
                         } else {
                             Text(detail).lineLimit(1).truncationMode(.middle)
-                        }
-
-                        if let branch = row.gitBranch {
-                            BranchLabel(branch: branch)
                         }
                     }
                     .font(.caption).foregroundStyle(.secondary)
@@ -214,10 +214,7 @@ struct FlagBadge: View {
     let row: PortRow
 
     var body: some View {
-        Text(text).font(.caption2.weight(.semibold))
-            .padding(.horizontal, 5).padding(.vertical, 1)
-            .background(color.opacity(0.2), in: .capsule).foregroundStyle(color)
-            .help(flag.reason)
+        Chip(text: text, color: color).help(flag.reason)
     }
 
     private var text: String {
