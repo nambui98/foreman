@@ -6,6 +6,8 @@ struct CleanupOverlay: View {
     let candidates: [PortRow]
     let confirm: ([PortRow]) -> Void
     let dismiss: () -> Void
+    /// Seeded once: refreshes while the sheet is open must not undo the user's ticks. Rows that
+    /// vanish meanwhile are dropped at confirm time (only current candidates are signalled).
     @State private var selected: Set<Int32>
 
     init(candidates: [PortRow], confirm: @escaping ([PortRow]) -> Void, dismiss: @escaping () -> Void) {

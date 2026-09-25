@@ -35,6 +35,8 @@ enum LsofParser {
                 guard seen.insert("\(pid)|\(address)|\(port)").inserted else { return }
                 result.listening.append(ListeningSocket(pid: pid, command: command, uid: uid, address: address, port: port))
             case "ESTABLISHED":
+                // Also listed once per fd when a connection's socket was dup'ed or inherited.
+                guard seen.insert("\(pid)|\(name)").inserted else { return }
                 result.established[pid, default: []].append(port)
             default:
                 return

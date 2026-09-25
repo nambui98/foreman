@@ -288,11 +288,7 @@ final class PortMonitor {
     func cleanUp(_ targets: [PortRow]) async {
         let killer = killer
         await withTaskGroup(of: (Int32, KillOutcome).self) { group in
-            for row in targets where row.isKillable {
-                guard let started = row.startSec,
-                      ProcessInspector.bsdInfo(pid: row.pid)?.pbi_start_tvsec == started else {
-                    continue
-                }
+            for row in targets where row.isKillable && Self.isSameProcess(row) {
                 killStates[row.pid] = .terminating
                 group.addTask { (row.pid, await killer.terminate(pid: row.pid, wholeGroup: false)) }
             }
@@ -301,6 +297,12 @@ final class PortMonitor {
             }
         }
         await refresh()
+    }
+
+    /// The row's PID still belongs to the process that was listed (start time unchanged).
+    nonisolated static func isSameProcess(_ row: PortRow) -> Bool {
+        guard let started = row.startSec else { return false }
+        return ProcessInspector.bsdInfo(pid: row.pid)?.pbi_start_tvsec == started
     }
 
     private static func state(after outcome: KillOutcome) -> KillState? {

@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import PortBar
 
@@ -90,6 +91,30 @@ struct LsofScanTests {
         #expect(scan.listening.map(\.port) == [3000, 5432])
         #expect(scan.established[501] == [3000, 61001])
         #expect(scan.established[777] == nil)
+    }
+
+    @Test func duplicatedConnectionFdCountsOnce() {
+        let output = "p501\ncnode\nu501\nf20\nn*:3000\nTST=LISTEN\n"
+            + "f21\nn127.0.0.1:3000->127.0.0.1:61000\nTST=ESTABLISHED\n"
+            + "f22\nn127.0.0.1:3000->127.0.0.1:61000\nTST=ESTABLISHED\n"
+        #expect(LsofParser.scan(output).established[501] == [3000])
+    }
+
+    @Test func cleanupSkipsRecycledPid() throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        process.arguments = ["30"]
+        try process.run()
+        defer { process.terminate() }
+        let started = try #require(ProcessInspector.bsdInfo(pid: process.processIdentifier)?.pbi_start_tvsec)
+        var row = PortRow(pid: process.processIdentifier, name: "sleep", ports: [1], commandLine: nil, cwd: nil,
+                          executablePath: nil, pgid: nil, cpuPercent: nil, memoryBytes: nil, group: .dev, isKillable: true)
+        row.startSec = started
+        #expect(PortMonitor.isSameProcess(row))
+        row.startSec = started - 60  // listed earlier as a different process with the same PID
+        #expect(!PortMonitor.isSameProcess(row))
+        row.startSec = nil
+        #expect(!PortMonitor.isSameProcess(row))
     }
 
     @Test func inboundCountsOnlyListeningPorts() {
