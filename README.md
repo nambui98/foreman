@@ -25,6 +25,10 @@ Install: copy `build/Build/Products/Release/PortBar.app` to `~/Applications`.
 - A group that contains an interactive terminal shell is never group-killed, so the terminal session survives.
 - Leftover dev servers are tagged **mồ côi** (parent exited, or folder deleted — e.g. a removed git worktree) or **rảnh Nh** (no inbound connection, no CPU, older than the idle threshold in Settings, over 3 refreshes). **Dọn (N)** in the header stops the ones you tick: orphans pre-ticked, idle ones not.
 
+## Menu bar & shortcut
+- The badge shows the dev process count, dev RAM, or both (Settings → Menu bar). The icon turns orange when dev RAM reaches the threshold (8 GB by default, 0 = off).
+- **⌥⌘P** (configurable) opens/closes the panel from anywhere. Settings also has *Mở PortBar khi đăng nhập* (launch at login; after reinstalling an ad-hoc signed build, toggle it off and on again).
+
 ## Agents tab
 Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex, Cursor Agent, Gemini CLI, Aider, opencode, Goose, Amp — with project folder, host app + tty, uptime, status (working / idle / paused) and CPU/RAM summed over the agent's whole process tree.
 - ⏸ **Pause** freezes the agent's child processes (tool commands, MCP servers, dev servers) with SIGSTOP. The agent itself is never stopped: SIGSTOP/SIGCONT on a terminal's foreground job makes the shell take the terminal back and the process dies on its next tty read. Children spawned while paused are paused too; everything is continued when PortBar quits, or on the next launch after a crash.

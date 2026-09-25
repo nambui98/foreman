@@ -30,7 +30,7 @@ struct AgentRowView: View {
                     HStack(spacing: 4) {
                         Text(cwd).lineLimit(1).truncationMode(.middle)
                         if let branch = agent.gitBranch {
-                            Label(branch, systemImage: "arrow.triangle.branch").lineLimit(1).layoutPriority(-1)
+                            BranchLabel(branch: branch)
                         }
                     }
                     .font(.caption).foregroundStyle(.secondary)

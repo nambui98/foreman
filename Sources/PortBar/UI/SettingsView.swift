@@ -25,6 +25,7 @@ struct SettingsView: View {
                     Text(loginError).font(.caption).foregroundStyle(.red)
                 }
             }
+            menuBarSection
             portsSection
             agentsSection
         }
@@ -32,6 +33,24 @@ struct SettingsView: View {
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { loginStatus = LoginItem.status }
+    }
+
+    @ViewBuilder private var menuBarSection: some View {
+        @Bindable var settings = settings
+        Section("Menu bar") {
+            Picker("Hiển thị", selection: $settings.badgeMode) {
+                ForEach(BadgeMode.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            Stepper(settings.ramWarnGB > 0 ? "Chấm cam khi RAM dev ≥ \(Int(settings.ramWarnGB)) GB" : "Không cảnh báo RAM",
+                    value: $settings.ramWarnGB, in: 0...64, step: 1)
+            Toggle("Phím tắt mở PortBar", isOn: $settings.hotKeyEnabled)
+            if settings.hotKeyEnabled {
+                LabeledContent("Tổ hợp phím") { HotKeyRecorder(combo: $settings.hotKey) }
+                if !settings.hotKeyRegistered {
+                    Text("Tổ hợp này đang bị app khác dùng — chọn tổ hợp khác.").font(.caption).foregroundStyle(.red)
+                }
+            }
+        }
     }
 
     @ViewBuilder private var portsSection: some View {

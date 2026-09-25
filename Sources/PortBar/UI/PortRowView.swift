@@ -32,7 +32,7 @@ struct PortRowView: View {
                     HStack(spacing: 4) {
                         Text(detail).lineLimit(1).truncationMode(.middle)
                         if let branch = row.gitBranch {
-                            Label(branch, systemImage: "arrow.triangle.branch").lineLimit(1).layoutPriority(-1)
+                            BranchLabel(branch: branch)
                         }
                     }
                     .font(.caption).foregroundStyle(.secondary)

@@ -2,10 +2,12 @@ import SwiftUI
 
 /// Owns the long-lived services; resumes every process PortBar paused on quit, receives
 /// `portbar://` URLs from agent hooks and delivers notifications.
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings: AppSettings
     let monitor: PortMonitor
     private var notifier: Notifier?
+    private var hotKey: HotKey?
 
     override init() {
         let settings = MainActor.assumeIsolated { AppSettings() }
@@ -23,6 +25,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             monitor.events.post = { notifier.post($0) }
             if settings.notifyEnabled { Notifier.requestAuthorization() }
             self.notifier = notifier
+            applyHotKey()
+        }
+    }
+
+    /// (Re)registers the global shortcut whenever its settings change.
+    @MainActor private func applyHotKey() {
+        withObservationTracking {
+            hotKey = settings.hotKeyEnabled ? HotKey(settings.hotKey) { PanelToggler.toggle() } : nil
+            settings.hotKeyRegistered = !settings.hotKeyEnabled || hotKey != nil
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.applyHotKey() }
         }
     }
 
@@ -50,7 +63,8 @@ struct PortBarApp: App {
                 .environment(monitor)
                 .environment(delegate.settings)
         } label: {
-            BadgeLabel(count: monitor.devCount)
+            BadgeLabel(count: monitor.devCount, memoryBytes: monitor.devMemoryBytes,
+                       mode: delegate.settings.badgeMode, warnGB: delegate.settings.ramWarnGB)
                 .task {
                     // Unit tests use the app as host; don't poll lsof or spawn timers there.
                     guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }

@@ -27,6 +27,8 @@ final class AppSettings {
         static let notifyEnabled = "notifyEnabled"
         static let notifyMinWorkSec = "notifyMinWorkSec"
         static let cpuIdleDebounceSec = "cpuIdleDebounceSec"
+        static let hotKeyEnabled = "hotKeyEnabled"
+        static let hotKey = "hotKey"
     }
 
     var badgeMode: BadgeMode { didSet { defaults.set(badgeMode.rawValue, forKey: Key.badgeMode) } }
@@ -42,6 +44,15 @@ final class AppSettings {
     /// Agents without hooks: how long CPU must stay idle before "done" is assumed.
     var cpuIdleDebounceSec: Double { didSet { defaults.set(cpuIdleDebounceSec, forKey: Key.cpuIdleDebounceSec) } }
 
+    var hotKeyEnabled: Bool { didSet { defaults.set(hotKeyEnabled, forKey: Key.hotKeyEnabled) } }
+    /// Global shortcut that opens/closes the panel.
+    var hotKey: HotKeyCombo {
+        didSet { defaults.set(try? JSONEncoder().encode(hotKey), forKey: Key.hotKey) }
+    }
+
+    /// False when the shortcut could not be registered (taken by another app); not persisted.
+    var hotKeyRegistered = true
+
     @ObservationIgnored private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -53,5 +64,8 @@ final class AppSettings {
         notifyEnabled = defaults.object(forKey: Key.notifyEnabled) as? Bool ?? true
         notifyMinWorkSec = defaults.object(forKey: Key.notifyMinWorkSec) as? Double ?? 20
         cpuIdleDebounceSec = defaults.object(forKey: Key.cpuIdleDebounceSec) as? Double ?? 30
+        hotKeyEnabled = defaults.object(forKey: Key.hotKeyEnabled) as? Bool ?? true
+        hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(HotKeyCombo.self, from: $0) }
+            ?? .standard
     }
 }
