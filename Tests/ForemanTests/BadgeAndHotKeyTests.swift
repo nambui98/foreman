@@ -76,11 +76,12 @@ struct HotKeyRegistrationTests {
         keyCode: UInt32(kVK_F13), carbonModifiers: UInt32(controlKey | optionKey | shiftKey), key: "F13")
 
     @Test func sameComboRegistersAgainOnlyAfterRelease() {
-        var first = HotKey(combo) {}
+        let first = HotKey(combo) {}
         #expect(first != nil)
         #expect(HotKey(combo) {} == nil)  // still held by `first`
-        first = nil
-        #expect(first == nil)
-        #expect(HotKey(combo) {} != nil)
+        first?.unregister()
+        let second = HotKey(combo) {}
+        #expect(second != nil)
+        second?.unregister()
     }
 }

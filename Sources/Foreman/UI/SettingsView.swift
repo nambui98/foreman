@@ -5,10 +5,11 @@ import SwiftUI
 /// window stays short instead of stacking every section.
 struct SettingsView: View {
     var body: some View {
+        // tabItem (not the macOS 15 `Tab` API) keeps Settings working on macOS 14.
         TabView {
-            Tab("General", systemImage: "gearshape") { GeneralSettings() }
-            Tab("Ports", systemImage: "network") { PortSettings() }
-            Tab("Agents", systemImage: "sparkles") { AgentSettings() }
+            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }
+            PortSettings().tabItem { Label("Ports", systemImage: "network") }
+            AgentSettings().tabItem { Label("Agents", systemImage: "sparkles") }
         }
         .frame(width: 460)
     }

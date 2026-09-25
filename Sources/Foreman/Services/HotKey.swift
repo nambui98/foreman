@@ -46,7 +46,8 @@ struct HotKeyCombo: Codable, Equatable, Sendable {
 }
 
 /// A registered global hotkey (Carbon `RegisterEventHotKey`: no Accessibility permission needed).
-/// Unregisters itself when released.
+/// The owner calls `unregister()` before dropping it: an isolated deinit would need the macOS 15+
+/// Swift runtime, and Foreman supports macOS 14.
 @MainActor
 final class HotKey {
     private static let signature: OSType = 0x4672_6D6E  // 'Frmn'
@@ -71,8 +72,9 @@ final class HotKey {
         Self.actions[id] = action
     }
 
-    isolated deinit {
+    func unregister() {
         if let ref { UnregisterEventHotKey(ref) }
+        ref = nil
         Self.actions[id] = nil
     }
 

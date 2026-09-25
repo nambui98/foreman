@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyHotKey() {
         withObservationTracking {
             // Carbon refuses a combo that is still registered, so release the old one first.
+            hotKey?.unregister()
             hotKey = nil
             hotKey = settings.hotKeyEnabled ? HotKey(settings.hotKey) { PanelToggler.toggle() } : nil
             settings.hotKeyRegistered = !settings.hotKeyEnabled || hotKey != nil
@@ -56,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         monitor.keepAwake.update(active: false)
+        hotKey?.unregister()
         monitor.agentController.resumeAll()
     }
 }
