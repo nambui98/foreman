@@ -28,6 +28,12 @@ Lists running AI coding agents — Claude Code (incl. Agent Team members), Codex
 - ⏸ **Pause** freezes the agent's child processes (tool commands, MCP servers, dev servers) with SIGSTOP. The agent itself is never stopped: SIGSTOP/SIGCONT on a terminal's foreground job makes the shell take the terminal back and the process dies on its next tty read. Children spawned while paused are paused too; everything is continued when PortBar quits, or on the next launch after a crash.
 - ✕ **Stop** sends SIGTERM to the agent and its whole tree (confirmed, lists every process; Force = SIGKILL). Claude/Codex sessions can be reopened with `claude --resume` / `codex resume`.
 - Port rows show which agent started them (e.g. `Claude Code · my-app`).
+- ↗ **Open terminal** focuses the agent's exact tab: Orca via `orca terminal switch` (tested with Orca 1.4.205), Terminal/iTerm via AppleScript matched by tty (asks for Automation permission once). Other hosts are just brought to the front.
+
+## Notifications
+Settings → Agents: a notification when an agent finishes a task (≥ 20s by default) or waits for you; clicking it opens the agent's terminal.
+- **Precise (recommended):** add the hooks shown in Settings (Copy button) — Claude Code `UserPromptSubmit` / `Stop` / `Notification` in `~/.claude/settings.json`, Codex `notify` in `~/.codex/config.toml`. Each hook runs `open -g "portbar://agent-event?e=start|stop|input&pid=$PPID"`; PortBar never edits these files.
+- **Fallback:** agents without hooks are watched by CPU: a working stretch ≥ 20s followed by 30s of idle CPU counts as done. While such a stretch is timed, agents are re-sampled every 3s (process table only, no lsof).
 
 ## How it works
 - Ports: `/usr/sbin/lsof +c 0 -nP -iTCP -sTCP:LISTEN -F pcun` (fixed argv, 3s timeout).

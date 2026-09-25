@@ -8,6 +8,8 @@ import Observation
 final class PortMonitor {
     static let openInterval: Duration = .seconds(2)
     static let closedInterval: Duration = .seconds(15)
+    /// Agent-only passes (process table, no lsof) while the CPU fallback times a working stretch.
+    static let agentInterval: Duration = .seconds(3)
 
     private(set) var rows: [PortRow] = []
     private(set) var lastError: String?
@@ -29,6 +31,12 @@ final class PortMonitor {
     private let killer = ProcessKiller()
     private let currentUID = getuid()
     private let home = NSHomeDirectory()
+    private var lastFullRefresh: ContinuousClock.Instant?
+    let events: AgentEventCenter
+
+    init(settings: AppSettings) {
+        events = AgentEventCenter(settings: settings)
+    }
 
     func start() {
         guard loop == nil else { return }
@@ -53,8 +61,18 @@ final class PortMonitor {
         defer { isRefreshing = false }
         repeat {
             refreshRequested = false
-            await refreshOnce()
+            await refreshOnce(includePorts: true)
         } while refreshRequested
+    }
+
+    /// Agents only (~3ms process-table pass, no lsof); skipped while a full refresh runs.
+    private func refreshAgents() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        await refreshOnce(includePorts: false)
+        isRefreshing = false
+        // A full refresh asked for meanwhile (user action, hook event) must not be lost.
+        if refreshRequested { await refresh() }
     }
 
     /// Everything gathered off the main actor in one pass.
@@ -66,9 +84,9 @@ final class PortMonitor {
         let cache: AgentDetector.Cache
     }
 
-    private func refreshOnce() async {
+    private func refreshOnce(includePorts: Bool) async {
         do {
-            let sockets = try await PortScanner.scan()
+            let sockets = includePorts ? try await PortScanner.scan() : []
             let pids = Set(sockets.map(\.pid))
             let uid = currentUID
             let cache = detectorCache
@@ -76,6 +94,8 @@ final class PortMonitor {
                 Self.collect(portPids: pids, currentUID: uid, cache: cache)
             }.value
             detectorCache = snapshot.cache
+            updateAgents(from: snapshot)
+            guard includePorts else { return }
 
             var cpu: [Int32: Double] = [:]
             for (pid, info) in snapshot.portDetails {
@@ -86,29 +106,33 @@ final class PortMonitor {
             }
             sampler.prune(keeping: pids)
 
-            let agentPids = Set(snapshot.agents.map(\.pid))
-            agentController.reconcile(table: snapshot.table, livePids: agentPids)
-            var agentCPU: [Int32: Double] = [:]
-            for (pid, tree) in snapshot.usage {
-                agentCPU[pid] = agentSampler.percent(pid: pid, cpuNs: tree.cpuTimeNs, wallNs: tree.sampledAtNs)
-            }
-            agentSampler.prune(keeping: agentPids)
-            agents = AgentRowBuilder.rows(
-                agents: snapshot.agents, usage: snapshot.usage, cpuPercent: agentCPU,
-                paused: Set(agentController.paused.keys))
-
             rows = RowBuilder.rows(
                 sockets: sockets, details: snapshot.portDetails, cpuPercent: cpu, currentUID: currentUID,
                 home: home,
                 owners: AgentRowBuilder.owners(portPids: pids, table: snapshot.table, agents: agents))
             // Forget kill state for processes that are gone.
             killStates = killStates.filter { pids.contains($0.key) }
-            agentStates = agentStates.filter { agentPids.contains($0.key) }
             lastError = nil
             lastUpdated = Date()
+            lastFullRefresh = .now
         } catch {
             lastError = error.localizedDescription
         }
+    }
+
+    private func updateAgents(from snapshot: Snapshot) {
+        let agentPids = Set(snapshot.agents.map(\.pid))
+        agentController.reconcile(table: snapshot.table, livePids: agentPids)
+        var agentCPU: [Int32: Double] = [:]
+        for (pid, tree) in snapshot.usage {
+            agentCPU[pid] = agentSampler.percent(pid: pid, cpuNs: tree.cpuTimeNs, wallNs: tree.sampledAtNs)
+        }
+        agentSampler.prune(keeping: agentPids)
+        agents = AgentRowBuilder.rows(
+            agents: snapshot.agents, usage: snapshot.usage, cpuPercent: agentCPU,
+            paused: Set(agentController.paused.keys))
+        agentStates = agentStates.filter { agentPids.contains($0.key) }
+        events.observe(agents: agents)
     }
 
     private nonisolated static func collect(
@@ -139,6 +163,34 @@ final class PortMonitor {
 
     // Actions take a fresh snapshot (~3ms): the last refresh can be up to 15s old and still list
     // processes that have exited since.
+
+    // MARK: Agent events
+
+    /// A `portbar://agent-event` URL from an agent hook. The pid is the hook shell's parent: the
+    /// agent itself or a wrapper below it, so it is matched against the agent and its ancestors.
+    func handleAgentEvent(_ url: URL) async {
+        guard let (kind, pid) = AgentEventURL.parse(url) else { return }
+        var agent = agent(containing: pid)
+        if agent == nil {
+            // An agent started since the last refresh is not listed yet.
+            await refresh()
+            agent = self.agent(containing: pid)
+        }
+        events.handleHook(kind, agent: agent)
+    }
+
+    private func agent(containing pid: Int32) -> AgentRow? {
+        let chain = [pid] + ProcessTable.snapshot().ancestors(of: pid)
+        return chain.lazy.compactMap { id in self.agents.first { $0.pid == id } }.first
+    }
+
+    /// Notification click: focus the agent's terminal if the same process is still running.
+    func openAgent(_ member: AgentController.Member) async {
+        guard let agent = agents.first(where: { $0.pid == member.pid && $0.startSec == member.startSec }) else {
+            return
+        }
+        await jumpToTerminal(agent)
+    }
 
     /// Focuses the agent's terminal tab; a failure is shown on the row (the host app still comes forward).
     func jumpToTerminal(_ agent: AgentRow) async {
@@ -209,10 +261,25 @@ final class PortMonitor {
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
-                await self.refresh()
-                try? await Task.sleep(for: self.isPanelVisible ? Self.openInterval : Self.closedInterval)
+                if self.isFullRefreshDue {
+                    await self.refresh()
+                } else {
+                    await self.refreshAgents()
+                }
+                try? await Task.sleep(for: self.nextTick)
             }
         }
+    }
+
+    /// lsof runs at the panel/closed cadence even when agent passes tick faster.
+    private var isFullRefreshDue: Bool {
+        guard !isPanelVisible, let last = lastFullRefresh else { return true }
+        return ContinuousClock.now - last >= Self.closedInterval - .milliseconds(500)
+    }
+
+    private var nextTick: Duration {
+        if isPanelVisible { return Self.openInterval }
+        return events.needsFastPolling ? Self.agentInterval : Self.closedInterval
     }
 
     /// `onAppear`/`onDisappear` of MenuBarExtra content is not guaranteed to fire on every toggle,

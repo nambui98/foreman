@@ -1,9 +1,11 @@
 import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 /// The Settings window (⌘, or the gear in the panel footer).
 struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(PortMonitor.self) private var monitor
     @State private var loginStatus = LoginItem.status
     @State private var loginError: String?
 
@@ -24,11 +26,47 @@ struct SettingsView: View {
                     Text(loginError).font(.caption).foregroundStyle(.red)
                 }
             }
+            agentsSection
         }
         .formStyle(.grouped)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { loginStatus = LoginItem.status }
+    }
+
+    @ViewBuilder private var agentsSection: some View {
+        @Bindable var settings = settings
+        Section("Agents") {
+            Toggle("Thông báo khi agent xong việc / chờ bạn", isOn: $settings.notifyEnabled)
+                .onChange(of: settings.notifyEnabled) { _, enabled in
+                    if enabled { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
+                }
+            Stepper("Chỉ báo task dài ≥ \(Int(settings.notifyMinWorkSec))s",
+                    value: $settings.notifyMinWorkSec, in: 0...600, step: 10)
+            Stepper("Agent không có hook: coi là xong sau \(Int(settings.cpuIdleDebounceSec))s CPU rảnh",
+                    value: $settings.cpuIdleDebounceSec, in: 10...300, step: 10)
+            snippet("Claude Code — gộp vào ~/.claude/settings.json", AgentEventURL.claudeHooksSnippet)
+            snippet("Codex — thêm vào ~/.codex/config.toml", AgentEventURL.codexNotifySnippet)
+            LabeledContent("Sự kiện hook gần nhất") {
+                Text(monitor.events.lastHookEvent ?? "chưa nhận").foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func snippet(_ title: String, _ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(title).font(.caption)
+                Spacer()
+                Button("Copy") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                }
+                .controlSize(.small)
+            }
+            Text(text).font(.system(.caption2, design: .monospaced)).textSelection(.enabled)
+                .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {
