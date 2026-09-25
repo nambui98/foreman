@@ -15,7 +15,7 @@ struct BadgeLabel: View {
             if Self.isOverThreshold(memoryBytes: memoryBytes, warnGB: warnGB) {
                 Image(nsImage: Self.warningIcon)
             } else {
-                Image(systemName: Self.symbol)
+                Image(Self.iconName)  // template asset: follows the menu bar's light/dark appearance
             }
             if let text = Self.text(count: count, memoryBytes: memoryBytes, mode: mode) {
                 Text(text).monospacedDigit()
@@ -46,13 +46,18 @@ struct BadgeLabel: View {
         warnGB > 0 && Double(memoryBytes) >= warnGB * 1_073_741_824
     }
 
-    private static let symbol = "point.3.connected.trianglepath.dotted"
+    /// The Foreman mark as a vector template image (Assets.xcassets/MenuBarIcon).
+    private static let iconName = "MenuBarIcon"
 
+    /// Same glyph pre-coloured orange; the menu bar keeps a non-template image's colours.
     private static let warningIcon: NSImage = {
-        let config = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-            .applying(NSImage.SymbolConfiguration(paletteColors: [.systemOrange]))
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "RAM cao")?
-            .withSymbolConfiguration(config) ?? NSImage()
+        guard let glyph = NSImage(named: iconName) else { return NSImage() }
+        let image = NSImage(size: glyph.size, flipped: false) { rect in
+            glyph.draw(in: rect)
+            NSColor.systemOrange.set()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
         image.isTemplate = false
         return image
     }()

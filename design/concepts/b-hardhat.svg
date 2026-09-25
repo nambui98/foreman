@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B3038"/><stop offset="1" stop-color="#15181D"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.10"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC247"/><stop offset="1" stop-color="#F29A12"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)"/>
+  <rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>
+  <path d="M292 560 C292 400 390 300 512 300 C634 300 732 400 732 560 Z" fill="url(#amber)"/>
+  <rect x="476" y="290" width="72" height="190" rx="36" fill="#FFD47A" opacity="0.55"/>
+  <rect x="240" y="552" width="544" height="64" rx="32" fill="#F2F4F7"/>
+  <path d="M372 672 L452 722 L372 772" fill="none" stroke="#F2F4F7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="496" y="750" width="156" height="44" rx="22" fill="#34C759"/>
+</svg>

@@ -1,3 +1,5 @@
+<p align="center"><img src="design/banner.png" alt="Foreman — every port, every AI coding agent, and what they leave running, watched from your macOS menu bar" width="880"></p>
+
 # Foreman
 
 **A macOS menu bar foreman for your dev machine.** One panel shows every listening port, every AI coding agent, and what they left running — and lets you stop, pause, clean up or jump to any of it.
@@ -165,6 +167,7 @@ scripts/package-release.sh                 # Release build zipped into release/F
 - `project.yml` is the source of truth (XcodeGen); `Foreman.xcodeproj` is generated and not committed.
 - `Sources/Foreman/Model` — value types; `Services` — data collection, process control, integrations; `UI` — SwiftUI views.
 - Swift 6 with strict concurrency; warnings are errors.
+- Design sources (app icon, mark, menu bar glyph, banner, brand sheet) are SVGs in `design/`; `Sources/Foreman/Assets.xcassets` holds the exported app icon and the menu bar template glyph. See `design/brand-sheet.png` for colours and usage.
 - Localization: English source strings in code, Vietnamese in `Sources/Foreman/Localizable.xcstrings` (and `InfoPlist.xcstrings`). New UI text needs a `vi` entry there; tests run in English (`-AppleLanguages (en)` in the scheme).
 
 ## License
