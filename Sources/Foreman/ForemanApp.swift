@@ -24,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         monitor.events.post = { notifier.post($0) }
         if settings.notifyEnabled { Notifier.requestAuthorization() }
         self.notifier = notifier
+        FloatingPanelController.shared.configure(monitor: monitor, settings: settings)
+        if settings.panelDetached { FloatingPanelController.shared.detach() }
         applyHotKey()
     }
 
@@ -33,7 +35,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Carbon refuses a combo that is still registered, so release the old one first.
             hotKey?.unregister()
             hotKey = nil
-            hotKey = settings.hotKeyEnabled ? HotKey(settings.hotKey) { PanelToggler.toggle() } : nil
+            hotKey = settings.hotKeyEnabled ? HotKey(settings.hotKey) { [settings] in
+                // While detached the shortcut shows/hides the floating window instead.
+                if settings.panelDetached { FloatingPanelController.shared.toggleVisibility() } else { PanelToggler.toggle() }
+            } : nil
             settings.hotKeyRegistered = !settings.hotKeyEnabled || hotKey != nil
         } onChange: { [weak self] in
             Task { @MainActor in self?.applyHotKey() }

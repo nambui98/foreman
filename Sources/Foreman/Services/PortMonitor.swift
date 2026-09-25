@@ -73,11 +73,15 @@ final class PortMonitor {
     }
 
     /// Faster refresh while the panel is visible; refreshes immediately on open.
+    /// Counted: the menu bar panel and the floating panel can be open at the same time.
     func setPanelOpen(_ open: Bool) {
-        guard open != isPanelOpen else { return }
-        isPanelOpen = open
+        openPanels = max(0, openPanels + (open ? 1 : -1))
+        guard (openPanels > 0) != isPanelOpen else { return }
+        isPanelOpen = openPanels > 0
         restartLoop()
     }
+
+    private var openPanels = 0
 
     /// Coalesces overlapping calls: a refresh requested while one is running runs once afterwards,
     /// so lsof is never spawned twice concurrently and CPU samples keep sane wall-clock deltas.

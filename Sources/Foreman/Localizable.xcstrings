@@ -143,6 +143,16 @@
         }
       }
     },
+    "Attach to the menu bar": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gắn lại vào menu bar"
+          }
+        }
+      }
+    },
     "Both": {
       "localizations": {
         "vi": {
@@ -303,6 +313,16 @@
         }
       }
     },
+    "Detach as a floating window": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tách thành cửa sổ nổi"
+          }
+        }
+      }
+    },
     "Dev RAM": {
       "localizations": {
         "vi": {
@@ -349,6 +369,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Xong việc sau %@"
+          }
+        }
+      }
+    },
+    "Drag down to detach the panel": {
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kéo xuống để tách panel ra"
           }
         }
       }

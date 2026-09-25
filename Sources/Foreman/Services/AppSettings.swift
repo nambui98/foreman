@@ -53,6 +53,7 @@ final class AppSettings {
         static let hotKeyEnabled = "hotKeyEnabled"
         static let hotKey = "hotKey"
         static let keepAwake = "keepAwake"
+        static let panelDetached = "panelDetached"
     }
 
     var language: AppLanguage {
@@ -77,6 +78,8 @@ final class AppSettings {
     /// Agents without hooks: how long CPU must stay idle before "done" is assumed.
     var cpuIdleDebounceSec: Double { didSet { defaults.set(cpuIdleDebounceSec, forKey: Key.cpuIdleDebounceSec) } }
 
+    /// The panel is torn off the menu bar as a floating window (restored at launch).
+    var panelDetached: Bool { didSet { defaults.set(panelDetached, forKey: Key.panelDetached) } }
     /// Prevent idle sleep while an agent is working.
     var keepAwake: Bool { didSet { defaults.set(keepAwake, forKey: Key.keepAwake) } }
     var hotKeyEnabled: Bool { didSet { defaults.set(hotKeyEnabled, forKey: Key.hotKeyEnabled) } }
@@ -103,6 +106,7 @@ final class AppSettings {
         notifyMinWorkSec = defaults.object(forKey: Key.notifyMinWorkSec) as? Double ?? 20
         cpuIdleDebounceSec = defaults.object(forKey: Key.cpuIdleDebounceSec) as? Double ?? 30
         keepAwake = defaults.object(forKey: Key.keepAwake) as? Bool ?? true
+        panelDetached = defaults.bool(forKey: Key.panelDetached)
         hotKeyEnabled = defaults.object(forKey: Key.hotKeyEnabled) as? Bool ?? true
         hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(HotKeyCombo.self, from: $0) }
             ?? .standard

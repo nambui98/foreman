@@ -62,6 +62,8 @@ macOS may ask for:
 | Notifications | First launch | "Agent finished / waiting for you" alerts |
 | Automation (Terminal / iTerm) | First ↗ on an agent in Terminal or iTerm | Select the exact tab by its tty |
 
+**Floating window.** Click 📌 in the panel header (or drag the header down) to tear the panel off the menu bar: it becomes a floating window you can drag anywhere, stays above other windows (full-screen apps too) and doesn't close when you click elsewhere. ⌥⌘P then shows/hides it; 📌 again or its close button puts it back in the menu bar. The position and the detached state are remembered.
+
 Optional: Settings (⌘, or the ⚙︎ in the panel footer) → **General** → *Open Foreman at login*. The same tab has **Language** (English / Tiếng Việt; applies after the restart button).
 
 ## Using Foreman

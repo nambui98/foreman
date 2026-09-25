@@ -9,10 +9,13 @@ struct PanelView: View {
     @State private var confirmation: Confirmation?
     @State private var tab: PanelTab = .ports
     @State private var showCleanup = false
+    /// Shown in the floating window rather than under the menu bar.
+    var isDetached = false
 
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(query: $query, tab: $tab, totals: totals) { showCleanup = true }
+            HeaderView(query: $query, tab: $tab, totals: totals, isDetached: isDetached) { showCleanup = true }
+                .padding(.top, isDetached ? 16 : 0)  // room for the floating window's close button
             Divider()
             // Every tab and state gets the same height: MenuBarExtra keeps the window's bottom edge
             // when it resizes, so a height change on tab switch pushed the header under the menu bar.
@@ -27,7 +30,7 @@ struct PanelView: View {
             footer
         }
         .frame(width: 420)
-        .background(PanelWindowAnchor())
+        .background { if !isDetached { PanelWindowAnchor() } }
         .onAppear { monitor.setPanelOpen(true) }
         .onDisappear { monitor.setPanelOpen(false) }
         .overlay {
